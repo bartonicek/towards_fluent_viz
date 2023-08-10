@@ -2,7 +2,9 @@
 title: "Towards Fluent Interactive Data Visualization"
 author: "Adam Bartonicek"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: bookdown::pdf_document2
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -11,14 +13,274 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-There is a subtle yet profound issue in the production and use of interactive data visualizations: *when we interact with a plot, what exactly are we interacting with?* On the face of it, it may not even seem obvious that there is any problem. Like static plots, interactive plots consist of geometric objects such as points, lines, or areas. Surely, when interacting with a visualization, we can just interact with the geometric objects we see? However, this is rarely the case. The reason is that the geometric objects we see cannot be interpreted in isolation, but only with reference to some underlying data. Further, when plotting data, we rarely plot it directly. Instead, most plots use the geometric objects to display some statistical summaries of the data, such as count, sum, mean, or quantiles. These summaries are obtained by applying mathematical functions to the data. The core argument of the present text is that these mathematical functions (and their properties) impose limits on what kinds of visualizations and interactions can be meaningfully composed. Before diving deeper into the issue, however, let's first define some key terms and draw a rough sketch of the data visualization process.
+There is a subtle yet profound issue in the production and use of interactive data visualizations: *when we interact with a plot, what exactly are we interacting with?* On the face of it, it may not even seem obvious that there is any problem. Like static plots, interactive plots consist of geometric objects such as points, lines, or areas. Surely, when interacting with a visualization, we can just interact with the geometric objects we see? However, this is rarely the case. The reason is that the geometric objects we see cannot be interpreted in isolation, but only with reference to some underlying data. Further, when plotting data, we rarely plot it directly. Instead, most plots use the geometric objects to display some statistical summaries of the data, such as count, sum, mean, or quantiles. These summaries are obtained by applying mathematical functions to the data. The core argument of the present text is that these mathematical functions (and their properties) impose limits on what kinds of visualizations and interactions can be meaningfully composed. Before diving deeper, however, let's first define some key terms and draw a rough sketch of the data visualization process.
 
-To create a data visualization, be it static or interactive, we need several key ingredients: data, summaries, scales/coordinate systems, and geometric objects. Firstly, every data visualization is built on top of some underlying data. Typically, the data is stored in a tabular format which we can represent as a set of rows $R$ (this is not strictly necessary, but will be used here for convenience). Secondly, each row $r_i \in R$ is transformed via a mathematical function into a collection of summaries $s_j \in S$. The function may be one-to-one (bijection), as in the case of a scatterplot, or, more often, many-to-one (surjection), as in the case of plots such as barplot, histogram, density plot, or violin plot. The function will typically reduce the cardinality of the set at hand such that $\lvert S \lvert \leq \lvert R \lvert$ (i.e. in a typical barplot, there will be fewer bars than there are rows of the data). This is done by stratifying on one or more variables which may either come from the data directly (as in the case of a barplot or a treemap) or may themselves be a summary of the data (as in the case of histogram bins). Importantly also, each collection $s_j \in S$ may (and usually will) hold multiple values produced by a different constituent function each - for example, the collection $s_j$ of summaries for a single boxplot box will consist of a median, first and third quartile, and the minimum and maximum of some variable, for a given level of some stratifying variable (which itself is an element of $s_j$). The output of these constituent functions may also depend on some extraneous parameters (such as anchor and binwidth in a histogram). Combined, the summaries form a partition of the data - if we give each collection of summaries a label $j \in J$ such that $\lvert J \lvert = \lvert S \lvert$, we could split the data rows $r_i \in R$ into sets belonging to the same collection of summaries $R_{j}$ (with no overlapping parts: if $j \neq k, R_j \cap R_k = \varnothing$), such that, if we combine these sets, we recover the original dataset: $R = \bigcup_{j \in J} R_j$. Thirdly, each collection of summaries $s_j \in S$ needs to be translated from the data- (or summary-) coordinates to graphical coordinates/attributes $g_j \in G$, by transforming each value via a scale (note that this mapping preserves cardinality: $\lvert G \lvert = \lvert S \lvert$). For numeric summaries, these typically come in the form of a linear transformation, such that the minimum and maximum of the data are mapped near the minimum and maximum of the plotting region along some axis, respectively. The scales may also provide additional transformations such as log-transformation or binning. Finally, the collections of graphical coordinates $g_j \in G$ are displayed by plotting them as geometric objects. These may be simple, such as points, lines, or bars, or compound, such as a boxplot or pointrange.     
+To create a data visualization, be it static or interactive, we need several key ingredients: data, summaries, scales/coordinate systems, and geometric objects. Firstly, every data visualization is built on top of some underlying data. Typically, the data is stored in a tabular( or "tidy") format which we can here represent as a set of rows $R$ (this is not strictly necessary, but will be used here for convenience). Secondly, each row $r_i \in R$ is transformed via a function $h$ into a collection of summaries $s_j \in S$. The function may be one-to-one (bijection), as in the case of a scatterplot, or, more often, many-to-one (surjection), as in the case of plots such as barplot, histogram, density plot, or violin plot. The function will typically reduce the cardinality of the set at hand such that $\lvert S \lvert \leq \lvert R \lvert$ (i.e. in a typical barplot, there will be fewer bars than there are rows of the data). This is done by stratifying on one or more variables which may either come from the data directly (as in the case of a barplot or a treemap) or may themselves be a summary of the data (as in the case of histogram bins). Importantly also, each collection $s_j \in S$ may (and usually will) hold multiple values produced by a different constituent function each - for example, the collection $s_j$ of summaries for a single boxplot "box" will consist of a median, first and third quartile, and the minimum and maximum of some variable, for a given level of some stratifying variable (which itself is an element of $s_j$). The output of these constituent functions may also depend on some external parameters, such as anchor and binwidth in a histogram. Combined, the summaries form a partition of the data - if we give each collection of summaries a label $j \in J$ such that $\lvert J \lvert = \lvert S \lvert$, we could split the data rows $r_i \in R$ into sets belonging to the same collection of summaries $R_{j}$ (with no overlapping parts: if $j \neq k, R_j \cap R_k = \varnothing$), such that, if we combine these sets, we recover the original dataset: $R = \bigcup_{j \in J} R_j$. Thirdly, each collection of summaries $s_j \in S$ needs to be translated from the data- (or summary-) coordinates to graphical coordinates/attributes $g_j \in G$, by transforming each value via a function $i$ typically called a scale (note that this mapping preserves cardinality: $\lvert G \lvert = \lvert S \lvert$). For numeric summaries, scales typically come in the form of linear transformations, such that the minimum and maximum of the data are mapped near the minimum and maximum of the plotting region, respectively. Scales may also provide additional non-linear transformations such as log-transformation or binning. Finally, the collections of graphical coordinates $g_j \in G$ are displayed by drawing them as geometric objects inside the plotting area. The geometric objects may be simple, such as points, lines, or bars, or compound, such as a boxplot or pointrange. Each attribute necessary to draw a geometric object such as x- and y-position, width, height, area, etc.. needs to be present in the corresponding $g_j$.     
 
 The whole process can be summarized as such:
 
-$$R \to S \to G$$
-$$\text{(rows)} \to \text{(summaries)} \to \text{(graphical coordinates/attributes)}$$
+$$R \overset{h}{\to} S \overset{i}{\to} G$$
 
-The above should be fairly non-controversial description of how a data visualization is produced, and applies equally well to static as well as interactive visualizations. There are a couple of important caveats though. Firstly, within each $s_j \in S$ and $g_j \in G$, some summaries may be ordered lists of values, as in the case of lineplot (i.e. lines need to be drawn by connecting a series of points in the correct order). Secondly, the sets of collections $S$ and $G$ mayb themselves be ordered and form a hierarchical or tree-like structure. This is particularly relevant in the case of stacking. For example, when drawing a stacked barplot, we need to stack the summaries representing the sub-bars on top of each other, such that each sub-bar is stacked under the appropriate parent-bar and in the correct order.  
+Or: 
 
+$$\text{(rows)} \overset{\text{summarize}}{\longrightarrow} \text{(summaries)} \overset{\text{translate}}{\longrightarrow} \text{(graph. coordinates)}$$
+
+The above should be fairly non-controversial description of how a data visualization is produced, and applies equally well to static as well as interactive visualizations. There are a couple of important caveats though. Firstly, while not always the case, *order* can be important. Within each $s_j \in S$ and $g_j \in G$, some summaries may be ordered lists of values, as in the case of the lineplot (i.e. lines need to be drawn by connecting a series of points in the correct order). Secondly, the collections in $S$ (and in turn, in $G$) may themselves be ordered and form a hierarchical or tree-like structure. This is particularly relevant in the case of stacking. For example, when drawing a stacked barplot, we need to stack the graphical coordinate values representing the sub-bars on top of each other, such that each sub-bar is stacked under the appropriate parent-bar and in the correct order (e.g. such that bars belonging to group 2 are always stacked on top of those belonging to group 1). Finally, the data limits (minimum and maximum) and values that are used for scales are often derived from $S$ rather than from the raw data (e.g. the upper y-axis limit in barplot or histogram is the highest count across bins). Further, the limits may come from a higher level of hierarchy than the summaries that are actually being drawn - for example, in a stacked barplot, for the upper y-axis limit we need to know the count (height) of the tallest *whole* bar but do not need to know the counts within the sub-bars (since these are, by definition, smaller). 
+
+This is where the differences between static and interactive visualizations become noticeable. In static visualizations, all computation is done only once, before the plot is rendered, and so the issues of order, hierarchical structure of the summaries, and the tracking of axis limits are less important. Interactive visualizations, on the other hand, need to reactively respond to the user's input, and some computations may need to be run many times within a single second. As a result, it is imperative to organize the process in such a way that only as little work as is neccessary is done.        
+
+## Interactivity and Hierarchy
+
+
+## The Problem of Statistical Summaries
+
+There is an even deeper issue when it comes to interactivity and statistical summaries of the data. Specifically, not every statistical summary "works" equally well - instead, some summaries may be better than other. Let's first illustrate the problem.
+
+Linked brushing or highlighting is one of the most popular types of interactive features used in interactive data visualizations. It allows the user to select objects (such as points or bars) within one plot by e.g. clicking or clicking-and-dragging, and the corresponding cases (rows of the data) are then highlighted in all other plots. Its usefulness comes from the fact that allows the user to rapidly "drill-down" and explore the summaries that would result from subsetting different rows of the data, within the context of the whole dataset.  
+
+Now, let's imagine we have three interactive plots: a classical scatterplot, a barplot of summarizing the counts within levels of some categorical variable $x$, and a barplot that summarizes the mean of some other variable $y$, within levels of the same categorical variable $x$. The plots are linked such that they allow for linked brushing/highlighting. Intuitively, it might seem that the barplot of counts and the barplot of means are equally valid/useful representations of the underlying data. However, if we consider these plots in the context of linked brushing, few subtle-yet-fundamental questions become apparent.  
+
+```{r empty, echo=FALSE, fig.height=3, fig.cap="The count within a selection (red) is zero if the selection is empty but the mean of an empty selection is not defined."}
+
+wt <- mtcars$wt
+mpg <- mtcars$mpg
+cyl <- mtcars$cyl
+disp <- mtcars$disp
+one <- numeric(nrow(mtcars)) + 1
+
+cyl_unique <- c(4, 6, 8)
+
+wt_lim0 <- 1.45
+wt_lim1 <- 2.5
+mpg_lim0 <- 25
+mpg_lim1 <- 34.5
+
+cyl_unique <- c(4, 6, 8)
+
+selected <- ((wt > wt_lim0) & (wt < wt_lim1) & (mpg > mpg_lim0) & mpg < mpg_lim1)
+col <- c("grey80", "indianred")[selected + 1]
+selected_cyls <- c(4, 6, 8) %in% unique(cyl[selected])
+
+bars11 <- tapply(one, cyl, sum)
+bars12 <- tapply(one[selected], cyl[selected], sum)
+
+bars21 <- tapply(disp, cyl, mean)
+bars22 <- tapply(disp[selected], cyl[selected], mean)
+
+axis_fun1 <- function() {
+  axis(1, tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+axis_fun2 <- function() {
+  axis(1, at = c(4, 6, 8), tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+par(mfrow = c(1, 3), mar = c(5, 4, 2, 0.5))
+
+plot(wt, mpg, pch = 20, col = col, cex = 2,
+     axes = FALSE, xlab = "Weight", ylab = "Mileage")
+rect(wt_lim0, mpg_lim0, wt_lim1, mpg_lim1, lty = "dashed")
+axis_fun1()
+
+barx <- c(4, 6, 8)
+barx0 <- barx - 0.75
+barx1 <- barx + 0.75
+
+barx_selected<- barx[selected_cyls]
+barx_notselected <- barx[!selected_cyls]
+barx0_selected <- barx0[selected_cyls]
+barx1_selected <- barx1[selected_cyls]
+barx0_notselected <- barx0[!selected_cyls]
+barx1_notselected <- barx1[!selected_cyls]
+
+plot(c(2, 10), c(0, max(bars11)), type = "n", 
+     axes = FALSE, xlab = "Cylinders", ylab = "Count")
+rect(barx0, 0, barx1, bars11,
+     col = "grey80", border = NA)
+rect(barx0_selected, 0, barx1_selected, bars12,
+     col = "indianred", border = NA)
+text(barx, c(bars12, 0, 0) + 0.75, labels = c(bars12, "0", "0"),
+     col = "indianred")
+axis_fun2()
+
+plot(c(2, 10), c(0, max(bars21)), type = "n",
+     axes = FALSE, xlab = "Cylinders", ylab = "Mean displacement")
+rect(cyl_unique - 0.75, 0, cyl_unique + 0.75, bars21,
+     col = "grey80", border = NA)
+rect(barx0_selected, 0, barx1_selected, bars22,
+     col = "indianred", border = NA)
+rect(barx0_notselected, 0, barx1_notselected, 100,
+     col = NA, border = "indianred", lty = "dashed")
+text(barx_notselected, 50, labels = "?", col = "indianred", cex = 1.5)
+text(barx_selected, bars22 + 10, labels = round(bars22), col = "indianred")
+axis_fun2()
+
+```
+
+Firstly, as is shown in Figure \@ref(fig:empty), how do we draw an empty selection? In the case of counts, we have a meaningful default value - zero - as in "the number of cases in an empty set is 0". However, there is no similar default value for means: the mean of an empty set is not defined. We could just not draw the bar representing the empty selection, however, that decouples the statistical summary from the visual representation: the absence of a bar may now indicate that *either* no cases are selected *or* that some cases are selected and their mean is equal to the lower y-axis limit. 
+
+```{r bigger, echo=FALSE, fig.height=3, fig.cap="The count within a selection (red) is always less than or equal to the count within the whole (grey) but the mean of a selection can be greater."}
+
+wt <- mtcars$wt
+mpg <- mtcars$mpg
+cyl <- mtcars$cyl
+disp <- mtcars$disp
+one <- numeric(nrow(mtcars)) + 1
+
+cyl_unique <- c(4, 6, 8)
+
+wt_lim0 <- 2
+wt_lim1 <- 3.5
+mpg_lim0 <- 20
+mpg_lim1 <- 26.5
+
+selected <- ((wt > wt_lim0) & (wt < wt_lim1) & (mpg > mpg_lim0) & mpg < mpg_lim1)
+col <- c("grey80", "indianred")[selected + 1]
+selected_cyls <- c(4, 6, 8) %in% unique(cyl[selected])
+
+bars11 <- tapply(one, cyl, sum)
+bars12 <- tapply(one[selected], cyl[selected], sum)
+
+bars21 <- tapply(disp, cyl, mean)
+bars22 <- tapply(disp[selected], cyl[selected], mean)
+
+axis_fun1 <- function() {
+  axis(1, tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+axis_fun2 <- function() {
+  axis(1, at = c(4, 6, 8), tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+par(mfrow = c(1, 3), mar = c(5, 4, 2, 0.5))
+
+plot(wt, mpg, pch = 20, col = col, cex = 2,
+     axes = FALSE, xlab = "Weight", ylab = "Mileage")
+rect(wt_lim0, mpg_lim0, wt_lim1, mpg_lim1, lty = "dashed")
+axis_fun1()
+
+barx <- c(4, 6, 8)
+barx0 <- barx - 0.75
+barx1 <- barx + 0.75
+
+barx_selected<- barx[selected_cyls]
+barx_notselected <- barx[!selected_cyls]
+barx0_selected <- barx0[selected_cyls]
+barx1_selected <- barx1[selected_cyls]
+barx0_notselected <- barx0[!selected_cyls]
+barx1_notselected <- barx1[!selected_cyls]
+
+plot(c(2, 10), c(0, max(bars11)), type = "n", 
+     axes = FALSE, xlab = "Cylinders", ylab = "Count")
+rect(barx0, 0, barx1, bars11,
+     col = "grey80", border = NA)
+rect(barx0_selected, 0, barx1_selected, bars12,
+     col = "indianred", border = NA)
+text(barx, c(bars12, 0, 0) + 0.75, labels = c(bars12, "0", "0"),
+     col = "indianred")
+axis_fun2()
+
+plot(c(2, 10), c(0, max(bars21)), type = "n",
+     axes = FALSE, xlab = "Cylinders", ylab = "Mean displacement")
+rect(cyl_unique - 0.75, 0, cyl_unique + 0.75, bars21,
+     col = "grey80", border = NA)
+rect(barx0_selected, 0, barx1_selected, bars22,
+     col = adjustcolor("indianred", 0.5), border = NA)
+rect(barx0_notselected, 0, barx1_notselected, 100,
+     col = NA, border = "indianred", lty = "dashed")
+text(barx_notselected, 50, labels = "?", col = "indianred", cex = 1.5)
+text(barx_selected, bars22 + 10, labels = paste0(round(bars22), "!"), col = "indianred")
+axis_fun2()
+
+```
+
+Second, as shown in Figure \@ref(fig:bigger), how does the summary on the selection relate to the summary on the whole? In the case of the barplot of counts, the height of the sub-bar is always less than or equal ($\leq$) to the height of the whole bar (because so is the count). In this way, we can always draw the sub-bar on top of the whole bar, and the whole bar will provide a stable visual reference. In fact, we can either draw the whole bar (as shown in grey in Figure \@ref(fig:bigger)) and draw the selected sub-bar (red) over it, both starting from the y-axis origin (0), or we can draw a red sub-bar and the "leftover" grey-sub bar stacked on top of it, starting from the top y-coordinate of the selection bar and with height $= \text{count of the whole} - \text{count of the selection}$. The resulting plots are visually identical. However, the barplot of means does not share these nice properties. Importantly, the "sub-bars" can be taller than the whole bar (because the mean of a subset can be greater than the mean of the original set). As a result, if we draw the selection sub-bars on top of the whole bar, the whole bar may be completely obscured by it (as shown in Figure \@ref(fig:bigger)). We could choose to draw the selection sub-bars as semitransparent, or draw the the bars side-by-side instead of on top of each other, however, the question then remains how to display the non-selected (grey) cases - do we draw the "whole" bar that remains the same height throughout interaction, or the "leftover" bar that changes as the selection changes? Also, if we draw the bars side-by-side, will the whole bar be initially wide and shrink in response to selection to accommodate the selection bar, or will it be narrow from the initial render? 
+
+Finally, as displayed in Figure \@ref(fig:stacking), when multiple selections/groups are present, how do we combine them together? Again, in the case of the barplot of counts, there is an idiosyncratic way to do this: we can stack the counts across the selection groups and the corresponding bars on top of each other, and the height of the resulting bar will accurately represent the count of the whole. And, as in the case of a single selection group, we can either draw the bars over each other, starting from the y-axis origin, or draw sub-bars stacked on top of each other, each starting where the last left off, and the resulting plots will be identical. In the case of barplot of means, however, there is no meaningful way to combine the selections. If we were to stack the bars on top of each other, the resulting statistic (i.e. the sum of the group means) would not be meaningful. Worse yet, if we were to take the mean of the group means, this might (and most likely will) be different from the mean of the whole: the mean of the group means is different from the grand mean. And again, the mean of the group means may be less that any one of the group means. Since we cannot meaningfully combine the statistics, we could draw them side-by-side, but again, considerations about rendering the base group and the bar width present themselves.
+
+```{r stacking, echo=FALSE, fig.height=3, fig.cap="Counts can be stacked on top of each other such that the count of the stacked bar accurately represents the count of the whole bar (i.e. one that would result from no selections). No such procedure exists for combining means."}
+
+
+wt <- mtcars$wt
+mpg <- mtcars$mpg
+cyl <- mtcars$cyl
+disp <- mtcars$disp
+one <- numeric(nrow(mtcars)) + 1
+
+cyl_unique <- c(4, 6, 8)
+
+# group1 <- ((wt < 4.1) & (mpg > 12.5) & (mpg < 25))
+# group2 <- ((wt < 2.5) & (mpg > 23))
+# group3 <- (wt > 4.5)
+
+# group2 <- (wt < 3) & (mpg > 15)
+group1 <- (wt > 2.5) & (wt < 4.5) & (mpg < 18.5)
+group2 <- (wt > 2.5) & (wt < 4.5) & (mpg > 18.5)
+
+group <- group1 * 1 + group2 * 2 + 1
+cols <- c("grey80", "steelblue", "indianred")
+col <- cols[group]
+
+
+axis_fun1 <- function() {
+  axis(1, tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+axis_fun2 <- function() {
+  axis(1, at = c(4, 6, 8), tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+bars11 <- tapply(one, cyl, sum)
+bars12 <- tapply(one, list(cyl, group), sum)
+bars12[is.na(bars12)] <- 0
+
+bars21 <- tapply(disp, cyl, mean)
+
+par(mfrow = c(1, 3), mar = c(5, 4, 2, 0.5))
+
+plot(wt, mpg, pch = 19, col = col, cex = 1.5,
+     axes = FALSE, xlab = "Weight", ylab = "Mileage")
+axis_fun1()
+
+plot(c(2, 10), c(0, max(bars11)), type = "n",
+     axes = FALSE, xlab = "Cylinders", ylab = "Count")
+rect(cyl_unique - 0.75, 0, cyl_unique + 0.75, bars11, 
+     col = "grey80", border = NA)
+for (i in 1:3) {
+  counts <- bars12[i, ]
+  y0 <- cumsum(c(0, counts[-length(counts)]))
+  y1 <- cumsum(counts)
+  
+  rect(cyl_unique[i] - 0.75, y0, cyl_unique[i] + 0.75, y1, 
+       col = cols, border = NA)
+} 
+text(c(4, 4, 6, 6, 8, 8, 8), c(8, 11, 2, 7, 3, 12, 14) - 0.75, 
+     labels = c("+8", "+3", "+2", "+5", "+3", "+9", "+2"), 
+     col = c("grey40", "white", "white", "white", "grey40", 
+             "white", "white"))
+axis_fun2()
+
+plot(c(2, 10), c(0, max(bars21)), type = "n",
+     axes = FALSE, xlab = "Cylinders", ylab = "Mean displacement")
+rect(cyl_unique - 0.75, 0, cyl_unique + 0.75, bars21, 
+     col = "grey80", border = NA)
+text(rep(c(4, 6, 8), each = 3), rep(25 * 1:3, 3), labels = "?",
+     col = rep(c("grey40", "steelblue", "indianred"), 3))
+axis_fun2()
+
+
+```
+
+To summarize, counts provide a meaningful and unambiguous way to display empty selections (0 or absence of a bar), a stable visual reference (the count within the whole bar is always greater than or equal to the count within the sub-bars), and a meaningful way to combine the statistics together (the sum of the counts within sub-bars is always equal to the count within the whole bar). Means have none of these nice properties. There are of course are ways to display means with linked brushing/selection, with some having been described above. The key point, however, is that with means there are more questions that need to be answered to produce coherent interactive visualizations. Consequently, a person interacting with a linked figure containing a barplot of means may be surprised in how the plot behaves, since among the solutions to each of the three questions there are none which would be more "natural" than others. In the barplot of counts, however, there *are* such natural solutions to the problems.
