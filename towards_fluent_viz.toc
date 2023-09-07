@@ -1,0 +1,19 @@
+\contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Rough sketch of the data visulization process}{2}{subsection.1.1}%
+\contentsline {section}{\numberline {2}Interactivity and Hierarchy}{4}{section.2}%
+\contentsline {section}{\numberline {3}The Problem of Statistical Summaries}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Representing empty selections}{5}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Part vs.\nobreakspace {}the whole}{5}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Combining parts}{6}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Statistics and their Properties}{7}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Few Relevant Bits of Category Theory}{8}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Functions}{8}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Partitions}{8}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Preorders}{8}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Monoids}{9}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Producing Graphics}{9}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Create Partitions: Partition}{11}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Compute Statistics: Reduce}{11}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Translate Statistics to Coordinates: Map}{11}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Combine Coordinates: Stack}{12}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Something else}{12}{section.6}%
