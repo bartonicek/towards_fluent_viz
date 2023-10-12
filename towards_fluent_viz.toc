@@ -6,19 +6,19 @@
 \contentsline {section}{\numberline {2}Interactivity and Hierarchy}{5}{section.2}%
 \contentsline {section}{\numberline {3}The Problem of Statistical Summaries}{5}{section.3}%
 \contentsline {subsection}{\numberline {3.1}Empty selections}{5}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}Part vs.\nobreakspace {}the whole}{5}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.2}Part vs.\nobreakspace {}the whole}{7}{subsection.3.2}%
 \contentsline {subsection}{\numberline {3.3}Combining parts}{7}{subsection.3.3}%
-\contentsline {subsection}{\numberline {3.4}Some statistics are better than others}{8}{subsection.3.4}%
-\contentsline {section}{\numberline {4}Few Relevant Bits of Category Theory}{8}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Functions}{8}{subsection.4.1}%
+\contentsline {subsection}{\numberline {3.4}Some statistics are better than others}{7}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Few Relevant Bits of Category Theory}{9}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Functions}{9}{subsection.4.1}%
 \contentsline {subsection}{\numberline {4.2}Partitions}{9}{subsection.4.2}%
 \contentsline {subsection}{\numberline {4.3}Preorders}{9}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}Monoids}{9}{subsection.4.4}%
-\contentsline {section}{\numberline {5}The Model}{10}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Data and Partitions}{10}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Computing Statistics}{12}{subsection.5.2}%
+\contentsline {subsection}{\numberline {4.4}Monoids}{10}{subsection.4.4}%
+\contentsline {section}{\numberline {5}The Model}{11}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Data and Partitions}{11}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Computing Statistics}{13}{subsection.5.2}%
 \contentsline {subsection}{\numberline {5.3}Create Partitions: Partition}{13}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Compute Statistics: Reduce}{13}{subsection.5.4}%
-\contentsline {subsection}{\numberline {5.5}Translate Statistics to Coordinates: Map}{13}{subsection.5.5}%
-\contentsline {subsection}{\numberline {5.6}Combine Coordinates: Stack}{13}{subsection.5.6}%
-\contentsline {section}{\numberline {6}Something else}{13}{section.6}%
+\contentsline {subsection}{\numberline {5.4}Compute Statistics: Reduce}{14}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Translate Statistics to Coordinates: Map}{14}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}Combine Coordinates: Stack}{14}{subsection.5.6}%
+\contentsline {section}{\numberline {6}Something else}{14}{section.6}%
