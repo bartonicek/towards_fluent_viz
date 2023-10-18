@@ -19,19 +19,19 @@ There is a subtle yet profound question in the production and use of interactive
 
 The illusion lies in the fact that the geometric object - the coloured rectangle representing the bar - is not meaningful on its own. Instead, the bar is only ever meaningful as a bar within the context of the plot. We can see this easily. If we were to take the coloured rectangle and transpose it onto a blank area of the screen, we would lose some crucial information that the context of the plot provides - it would no longer be a "bar" in the same sense that it was before.  
 
-So objects in plots have some additional structure, beyond their simple geometry. That statement should not come as surprising or controversial to people familiar with data visualization. However, it may be more challenging to define in detail what exactly this "structure" is. There are a few ideas we may be able to muster. We know that the geometric objects in a plot are supposed to represent some underlying data. That much is clear - if objects in a graphic do not represent any external information but are instead drawn according to some arbitrary rules, we cannot really, in good conscience, call it a "plot". But data is only a part of the story. When drawing plots, we rarely represent the raw data directly. Instead, we often summarize, aggregate, or transform the data, by applying mathematical functions such as count, sum, mean, log, or the quantile function. 
+Thus, objects in plots carry some additional information or structure, beyond their simple geometry. That statement should not seem surprising or controversial to people familiar with data visualization. However, it may be more challenging to define in detail what exactly this "structure" is. There are a few ideas we may be able to muster. We know that the geometric objects in plots are supposed to represent some underlying data. That much is clear - if the objects in a graphic do not represent any external data but are instead drawn according to some arbitrary rules, we cannot really, in good conscience, call the resulting graphic a "plot". But data is only a part of the story. When drawing plots, we rarely represent the raw data directly. Instead, we often summarize, aggregate, or transform the data. We do this by applying mathematical functions such as count, sum, mean, log, or the quantile function. And it is the output of these transformations that we then represent by the geometric objects. 
 
-The output of these transformations is what we then represent by the geometric objects. So, when interacting with a bar in an interactive barplot, we are not just interacting with a plain geometric object, we are interacting with a mathematical function, or, in fact, several of them. This is important since functions have properties. The core argument of the present text is that the properties of these functions impose limits on what kinds of visualizations and interactions can be meaningfully composed. Before diving deeper, however, let's first define some key terms and draw a rough sketch of the data visualization process. 
+So, when interacting with a bar in an interactive barplot, we are not just interacting with a plain geometric object, we are interacting with a mathematical function, or, in fact, several of them. This is important since functions have properties. The core argument of the present text is that the properties of these functions impose limits on what kinds of visualizations and interactions can be meaningfully composed. Before diving deeper, however, let's first define some key terms and draw a rough sketch of the data visualization process. 
 
 ## Rough sketch of the data visulization process
 
-To create a data visualization, be it static or interactive, we need several key ingredients: data, summaries, scales/coordinate systems, and geometric objects. First of all, as was mentioned above, every data visualization needs to be built on top of some underlying data. We can represent this as a set of some arbitrary units of information $D$. Data in the wild usually comes with more structure than that - for example, we often encounter data stored in a tabular ( or "tidy" [CITE]) format, stratified by rows and columns. In that case, we could substitute $D$ by the set of rows $R$, the set of columns $C$, or the set of cell values $R \times C$ (where $\times$ indicates the cartesian product). However, for the purpose of this description, we do not have to assume any special structure and just speak of the data units $d \in D$.  
+To create a data visualization, be it static or interactive, we need several key ingredients: data, summaries, scales/coordinate systems, and geometric objects. First of all, as was mentioned above, every data visualization needs to be built on top of some underlying data. We can represent this as a set of some arbitrary units of information (data) $D$. Data in the wild usually comes with more structure than that - for example, we often encounter data stored in a tabular ( or "tidy" [CITE]) format, stratified by rows and columns. In that case, we could substitute $D$ by the set of rows $R$, the set of columns $C$, or the set of cell values $R \times C$ (where $\times$ indicates the cartesian product). However, for the purpose of this description, we do not have to assume any special structure and just speak of the data units $d \in D$.  
 
-Secondly, the set of data units $D$ is transformed into a set of collections of summaries $S$ via some function $\alpha$. It may be the case that $\alpha$ is one-to-one (bijection), in which case there is one unit of data for every summary. Examples of this include the typical scatterplot, in which $\alpha$ is the identity function. However, more often, $\alpha$ is many-to-one (surjection), which means that each summary may be composed of multiple units of data. This is the case for the typical barplot, histogram, density plot, or violin plot. When $\alpha$ is many-to-one, it will typically reduce the cardinality of the set at hand such that $\lvert S \lvert \leq \lvert D \lvert$ (i.e. in a typical barplot, there will be fewer bars than there are rows of the data, unless each row has a unique level of the categorical variable). This is done by stratifying on one or more variables which may either come from the data directly (as in the case of a barplot or a treemap) or may themselves be a summary of the data (as in the case of histogram bins). Importantly also, each collection of summaries $s \in S$ may (and usually will) hold multiple values, produced by a different constituent function each - for example, the collection $s$ for a single boxplot "box" will consist of a median, first and third quartile, the minimum and maximum of some variable, and the outlier values, for a given level of some stratifying variable (which itself will also be an element of $s$). Finally, the output of these constituent functions may also depend on some external parameters, such as anchor and binwidth in a histogram, which may be either directly supplied by the visualization creator or inferred from the data via some heuristic.
+Secondly, the set of data units $D$ is transformed into a set of collections of summaries $S$ via some function $\alpha$. It may be the case that $\alpha$ is one-to-one (bijection), in which case there is one unit of data for every summary. This is the case with the typical scatterplot, in which $\alpha$ is just the identity function. However, more often, $\alpha$ is many-to-one (surjection), which means that each summary may be composed of multiple units of data. Examples of this include the typical barplot, histogram, density plot, or violin plot. When $\alpha$ is many-to-one, it will typically reduce the cardinality of the data, such that $\lvert S \lvert \leq \lvert D \lvert$ (i.e. in a typical barplot, there will be fewer bars than there are rows of the data, unless each row has a unique level of the categorical variable). This is done by stratifying on one or more variables which may either come from the data directly (as in the case of a barplot or a treemap) or may themselves be a summary of the data (as in the case of histogram bins). Importantly also, each collection of summaries $s \in S$ may (and usually will) hold multiple values, produced by a different constituent function each - for example, the collection $s$ for a single boxplot "box" will consist of the median, the first and third quartile, the minimum and maximum, and the outlier values of some variable, all for a given level of some stratifying variable (which itself will also be an element of $s$). Finally, the output of these constituent functions may also depend on some external parameters, which may be either directly supplied by the user or heuristically inferred from the data by the visualization system itself. Examples of such external parameters include anchor and binwidth in a histogram.
 
 Thirdly, each collection of summaries $s \in S$ needs to be translated from the data- (or summary-) coordinates to graphical coordinates/attributes $g \in G$, via a function $\beta$. This means that each summary value gets mapped or "scaled" to a graphical attribute via a constituent scaling function. Note that this mapping preserves cardinality - there are as many collections of graphical attributes as there are collections of summaries, $\lvert G \lvert = \lvert S \lvert$. For numeric/continuous summaries, scales typically come in the form of linear transformations, such that the minimum and maximum of the data are mapped near the minimum and maximum of the plotting region, respectively. Continuous scales may also provide non-linear trasnformations such as log-transformation or binning, and the values may even get mapped to discrete graphical attributes. Likewise, discrete summaries may get translated to either continuous or discrete graphical attributes. There are also coordinate systems, which may further translate values from multiple scales simultaneously, e.g. by taking values in cartesian (usual) coordinates and translating them to polar coordinates. Either way, $\beta$ can be viewed as one function, representing the composition of scales and coordinate systems.  
 
-Finally, the collections of graphical attributes/coordinates $g \in G$ are drawn as geometric objects inside the plotting region, which we can represent as the set of pixels $P$. While the act of drawing does take the collections of graphical coordinates $g \in G$ as inputs, it does not simply return an output for each input (like a mathematical function would), but instead mutates the state of the graphical device via a side effect $\gamma^*$, i.e. changing the colour values of pixels. In other words, how the graphic ends up looking may depend on the order in which we draw things, for example, some geometric objects may end up being plotted over others, and so $\gamma^*$ is not a simple mapping from $G$ to $P$. As such, we cannot call $\gamma^*$ a true mathematical function. The geometric objects may be simple, such as points, lines, or bars, or compound, such as a boxplot or pointrange. Importantly, each attribute necessary to draw the geometric object, such as x- and y-position, width, height, area, etc... needs to be present in the corresponding $g$.     
+Finally, the collections of graphical attributes/coordinates $g \in G$ are drawn as geometric objects inside the plotting region, which we can represent as the set of pixels $P$. While the act of drawing does take the collections of graphical coordinates $g \in G$ as inputs, it does not simply return an output for each input (like a mathematical function would), but instead mutates the state of the graphical device via a side effect $\gamma^*$, i.e. changing the colour values of pixels in $P$. In other words, how the graphic ends up looking may depend, for example, on the order in which we draw the objects. For example, when drawing points of different colour, some points may end up being plotted over others, and thus the final result may depend on whether we draw red points first and yellow second or vice versa. As such, $\gamma^*$ is not a simple mapping from $G$ to $P$ and we cannot call it a true mathematical function (since that would require it to merely assign an output to each input). The geometric objects may be simple, such as points, lines, or bars, or compound, such as a boxplot or pointrange. Importantly, each attribute necessary to draw the geometric object, such as x- and y-position, width, height, area, etc... needs to be present in the corresponding $g$.     
 
 The whole process can be summarized as follows:
 
@@ -43,11 +43,13 @@ $$\text{(data)} \overset{\text{summarize}}{\longrightarrow} \text{(summaries)} \
 
 The above should be fairly non-controversial description of how a data visualization is produced, and applies equally well to static as well as interactive visualizations. 
 
-## Why summaries matter
+## Summaries as first-class citizens
 
-In some treatments of data visualization, the summarizing step ($\alpha: D \to S$) is de-emphasized, in one of two ways. In the first case, the data is already presumed to arrive pre-summarized (i.e. $S = D$, for example we can draw a barplot from a pre-summarized table of counts), and data visualization is just about encoding the data into graphical coordinates. This framing feels especially natural when considering plots which show a 1-to-1 mapping (bijection) between the data and the geometric objects, such as the scatterplot or the lineplot/time-series chart. Indeed, in these plots, the summarizing function is identity, and as such *can* be ignored. In the second case, the computation of summaries is considered, however, it is absorbed into the translation step, such that $\alpha = \beta$ (e.g., a histogram may be thought of as directly translating its underlying variable into bin coordinates). Both of these approaches produce a tight coupling between the summaries and graphical coordinates.
+In some treatments of data visualization, the summarizing step ($\alpha: D \to S$) is de-emphasized, in one of two ways. In the first case, the data is already presumed to arrive pre-summarized (i.e. $S = D$, for example we can draw a barplot from a pre-summarized table of counts), and data visualization is just about encoding the data into graphical coordinates. This framing feels especially natural when considering plots which show a 1-to-1 mapping (bijection) between the data and the geometric objects, such as the scatterplot or the lineplot/time-series chart. Indeed, in these plots, the summarizing function is identity, and as such *can* be ignored. In the second case, the computation of summaries is considered, however, it is absorbed into the translation step, such that $\alpha = \beta$ (for example, a histogram may be thought of as directly translating its underlying variable into bin coordinates). 
 
-We can give a much richer account of visualizations by treating both the summarizing and the translating step as first class citizens. Crucially, some plots may encode the same summaries through different graphical attributes and geometric objects; other plots may compute different summaries but display them via the same means. As an example of the former, please inspect the histogram and spineplot in Figure \@ref(fig:histospine). Histograms and spineplots use the same summaries, i.e. binned counts of some underlying continuous variable $x$. However, histograms encodes the bin breaks into rectangle boundaries along the x-axis, and the counts as the top rectangle boundary along the y-axis, whereas spineplot encodes the counts into both x- and y-axis rectangle boundaries, with both the x- and the y- dimensions stacked and the y-dimension additionally scaled to 1, and the bin breaks are encoded as x-axis labels. As an example of the latter, scatterplot and bubbleplot both use points/circles to display their underlying summaries, however, whereas the summary for scatterplot is identity (or at least bijective), the summary for bubbleplot involves binning along x- and y- axis.  
+However, these approaches produce a tight coupling between the summaries and graphical coordinates and as a result have some major disadvantages. The first approach, which assumes that data arrives pre-summarized, makes it awkward to create all but the most simple types of plots - most users of data visualization would probably not enjoy having to go through several data-wrangling steps every time they wanted to display a simple a boxplot. Conversely, the second approach, which absorbs the summarizing step into the translation step, makes it hard to create new types of plots by simply replacing the summary statistics, since these are now tied to the graphics. As such, both approaches are difficult to generalize.      
+
+We can give a much richer and general account of visualizations by treating both the summarizing and the translating step as first class citizens. Importantly, some plots may encode the same summaries through different graphical attributes and geometric objects; other plots may compute different summaries but display them via the same means. As an example of the former, see the examples of histogram and spineplot in Figure \@ref(fig:histospine). Histograms and spineplots use the same summaries, i.e. binned counts of some underlying continuous variable $x$. However, histograms encodes the bin breaks into rectangle boundaries along the x-axis, and the counts as the top rectangle boundary along the y-axis, whereas spineplot encodes the counts into both x- and y-axis rectangle boundaries, with both the x- and the y- dimensions stacked and the y-dimension additionally scaled to 1, and the bin breaks are encoded as x-axis labels. As an example of the latter, scatterplot and bubbleplot both use points/circles to display their underlying summaries, however, whereas the summary for scatterplot is identity (or at least bijective), the summary for bubbleplot involves binning along x- and y- axis.  
 
 ```{r histospine, fig.height=3, echo=FALSE, fig.cap="Histogram and spineplot use the same summaries but encode them in different ways. a) In histogram, the x-axis display bin breaks and y-axis displays count, stacked across groups (failure/no failure). b) In spineplot, the x-axis and y-axis both display count; the x-axis shows count stacked across bins, whereas the y-axis shows count stacked across groups and scaled by the total bin count (such that the total bin height = 1). The bin breaks are displayed as x-axis labels (however, the underlying summary is still stacked count)."}
 
@@ -113,7 +115,7 @@ However, this approach may be wasteful. To see this, let's first describe what s
 
 ```{r hierarchy}
 #| echo: false
-#| fig-cap: "Reactive hierarchy in a stacked histogram. When selection changes (as a result of linked brushing), we do not need to recompute bins (since these depend just on the data, anchor, and binwidth). Instead, we only need to recompute count within each sub-bar, defined by combinations of bin and group. However, when either anchor or binwidth change, we do need to recompute the bins, and as a result counts as well."
+#| fig-cap: "Reactive hierarchy in a stacked histogram. When selection changes (as a result of linked brushing), we do not need to recompute bins, since these depend just on the data, anchor, and binwidth (= parent nodes). Instead, we only need to recompute count within each sub-bar, defined by combinations of bin and group. However, when either anchor or binwidth change, we do need to recompute the bins, and as a result counts as well (= child nodes)."
 
 library(grid)
 
@@ -158,13 +160,13 @@ There is an even deeper issue when it comes to interactivity and statistical sum
 
 ## Case study: Counts and Means
 
-Linked brushing or highlighting is one of the most popular types of interactive features used in interactive data visualizations [CITE]. It allows the user to select objects (such as points or bars) within one plot by e.g. clicking or clicking-and-dragging, and the corresponding cases (rows of the data) are then highlighted in all other plots. Its usefulness comes from the fact that allows the user to rapidly "drill-down" [CITE] and explore the summaries that would result from subsetting different rows of the data, within the context of the entire dataset.  
+Linked brushing or highlighting is one of the most popular and useful types of interactive features used in interactive data visualizations [CITE]. It allows the user to select objects (such as points or bars) within one plot by e.g. clicking or clicking-and-dragging, and the corresponding cases (rows of the data) are then highlighted in all other plots. The usefulness of linked brushing comes from the fact that allows the user to rapidly "drill-down" [CITE] and explore the summaries that would result from subsetting different rows of the data, within the context of the entire dataset.  
 
-Now, let's imagine we have three interactive plots: a classical scatterplot, a barplot of summarizing the count of cases within the levels of some categorical variable $x$, and a barplot summarizing the mean of some other variable $y$, within levels of the same categorical variable $x$. The plots are linked such that they allow for linked brushing/highlighting. Intuitively, it might seem that the barplot of counts and the barplot of means are equally valid/useful representations of the underlying data. However, if we consider these plots in the context of linked brushing, few subtle-yet-fundamental differences become apparent.  
+Now, let's imagine we have three interactive plots: a classical scatterplot, a barplot of summarizing the count of cases within the levels of some categorical variable $x$, and a barplot summarizing the mean of some other variable $y$, within levels of the same categorical variable $x$. The plots are linked such clicking/clicking-and-dragging on one produces a visual change in the others, by highlighting the corresponding cases of data. Intuitively, it might seem that the barplot of counts and the barplot of means should be equally valid/useful representations of the data. However, if we consider these plots in the context of linked brushing, few subtle-yet-fundamental differences emerge. 
 
 ```{r empty, echo=FALSE }
 #| fig.height: 3
-#| fig.cap: "The problem of representing empty selection. a) An illustration of selection by linked brushing. b) In the barplot of counts, the count within an empty selection (red) is zero and so an absence of a bar accurately represents a count of zero. c) In the barplot of means, the mean of an empty selection is not defined. Absence of a bar could indicate that either no cases are selected or some cases are selected and their mean is equal to the lower y-axis limit."
+#| fig.cap: "The problem of representing empty selection. a) An illustration of selection by linked brushing. b) In the barplot of counts, the count within an empty selection (red) is zero and so an absence of a bar accurately represents a count of zero. c) In the barplot of means, the mean of an empty selection is not defined. Absence of a bar could indicate that either no cases are selected or some cases are selected and their mean is equal to the lower y-axis limit (zero in this case)."
 
 wt <- mtcars$wt
 mpg <- mtcars$mpg
@@ -250,11 +252,14 @@ axis_fun2()
 
 ## Empty selections
 
-Firstly, as is shown in Figure \@ref(fig:empty), how do we draw an empty selection? In the case of counts, we have a meaningful default value - zero - as in "the number of cases in an empty set is 0". When we seen an absence of a bar in a barplot, we know that the count for the corresponding level of the stratifying variables.
+Firstly, as is shown in Figure \@ref(fig:empty), how do we draw an empty selection? In the case of counts, we have a meaningful default value - zero - as in "the number of cases in an empty selection is zero". In other words, the absence of a bar in a barplot unambiguously communicates that the count for the corresponding level of the stratifying variables is zero.
 
-However, there is no similar default value for means: the mean of an empty set is not defined. We could just not draw the bar representing the empty selection, however, that decouples the statistical summary from the visual representation: the absence of a bar may now indicate that *either* no cases are selected *or* that some cases are selected and their mean is equal to the lower y-axis limit. 
+However, for means, there is no such default value: the mean of an empty set is not defined. As a result, whenever we encounter an empty selection, we are faced with the problem of how to represent it. We could choose not to draw the bar representing the empty selection, however, that decouples the statistical summary from the visual representation. That is, the absence of a bar may now indicate that *either* no cases are selected *or* that some cases are selected and that their mean is equal to the lower y-axis limit. 
 
-```{r bigger, echo=FALSE, fig.height=3, fig.cap="The relationship between selection vs. the whole. a) An illustration of selection by linked brushing. b) In the barplot of counts (middle), the count within a selection (red) is always less than or equal to the count within the whole and the outline of the bars does not change. c) In the barplot of means, the mean of a selection can be greater and so the outline of the bars will change in response to user input."}
+```{r bigger}
+#| echo: FALSE
+#| fig.height: 3
+#| fig.cap: "The relationship between selection vs. the whole. a) An illustration of selection by linked brushing. b) In the barplot of counts (middle), the count within a selection (red) is always less than or equal to the count within the whole and the outline of the bars does not change. c) In the barplot of means, the mean of a selection can be greater and so the outline of the bars will change in response to user input."
 
 wt <- mtcars$wt
 mpg <- mtcars$mpg
@@ -338,15 +343,15 @@ axis_fun2()
 
 ## Part vs. the whole
 
-Second, as shown in Figure \@ref(fig:bigger), how does the summary on the selection relate to the summary on the whole? In the case of the barplot of counts, the height of the sub-bar is always less than or equal ($\leq$) to the height of the whole bar (because so is the count). Thus, we can always draw the sub-bar over the whole bar, and the whole bar act as a stable visual reference - the outline of the whole bar will remain the same no matter which cases of the data are selected. In fact, we can either draw the whole bar (as shown in grey in Figure \@ref(fig:bigger)) and draw the selected sub-bar (red) over it, both starting from the y-axis origin (0), or we can draw a red sub-bar and the "leftover" grey-sub bar stacked on top of it, starting from the top y-coordinate of the selection bar and with $\textbf{height} = (\text{count of the whole} - \text{count of the selection})$. The resulting plots will be identical, visually. 
+Second, as shown in Figure \@ref(fig:bigger), how does the summary on the selection relate to the summary on the whole? In the case of the barplot of counts, the height of the sub-bar is always less than or equal ($\leq$) to the height of the whole bar (because so is the count). Thus, we can always draw the sub-bar over the whole bar, and the whole bar act as a stable visual reference - the outline of the bars stacked on top of each other will remain the same no matter which cases of the data are selected. In fact, we can either draw the whole bar (as shown in grey in Figure \@ref(fig:bigger)) and draw the selected sub-bar (red) over it, both starting from the y-axis origin (0), or we can draw a red sub-bar and the "leftover" grey-sub bar stacked on top, starting from the top y-coordinate of the selection bar and with $\textbf{height} = (\text{count of the whole} - \text{count of the selection})$. The resulting geometric objects will be visually identical.
 
-The barplot of means, does not share these nice properties. Specifically, the "sub-bars" can be taller than the whole bar (because the mean of a subset can be greater than the mean of the original set). As a result, if we draw the selection sub-bars on top of the whole bar, the whole bar may become completely obscured by it (as shown in Figure \@ref(fig:bigger)). We could choose to draw the selection sub-bars as semitransparent, or draw the the bars side-by-side instead of on top of each other (dodging), however, the question then remains how to display the non-selected (grey) cases - do we draw the "whole" bar that remains the same height throughout interaction, or the "leftover" bar whose height changes with the selection? Also, if we choose to draw the bars side-by-side, will the whole bar be initially wide and shrink in response to selection to accommodate the selection bars, or will it be narrow from the initial render? Finally, if the user brushes the side-by-side bars, will they be able to select individual bars or will brushing one select all of them? 
+The barplot of means does not share this property. Specifically, the "sub-bars" can be taller than the whole bar (because the mean of a subset can be greater than the mean of the original set). As a result, if we draw the selection sub-bars on top of the whole bar, the whole bar may become completely obscured by the sub-bar (as shown in Figure \@ref(fig:bigger)). We could choose to draw the selection sub-bars as semitransparent, or draw the the bars side-by-side instead of on top of each other (i.e. technique known as "dodging"), however, the question then remains how to display the non-selected (grey) cases - do we draw the "whole" bar that remains the same height throughout interaction, or the "leftover" bar whose height changes with the selection? Also, if we choose to draw the bars side-by-side, will the whole bar be initially wide and shrink in response to selection to accommodate the selection bars, or will it be narrow from the initial render? Finally, if the user brushes the side-by-side bars, will they be able to select individual bars or will brushing one select all of them? 
 
 ## Combining parts
 
-Finally, as displayed in Figure \@ref(fig:stacking), when multiple selections/groups are present, how do we combine them together? Again, in the case of the barplot of counts, there is an idiosyncratic way to do this: we can stack the counts across the selection groups and the corresponding bars on top of each other, and the height of the resulting bar will be identical to the count of the whole. And, as in the case of a single selection group, we can either draw the bars over each other, starting from the y-axis origin, or draw sub-bars stacked on top of each other, each starting where the last left off, and the resulting plots will be identical. 
+Finally, as displayed in Figure \@ref(fig:stacking), when multiple selections/groups are present, can we combine them in a meaningful way? Again, in the case of the barplot of counts, there is an idiomatic way to do this: we can stack the counts across the selection groups and the corresponding bars on top of each other, and the height of the resulting bar will be identical to the count of the whole. And, as in the case of a single selection group, we are free to either draw the bars over each other, starting from the y-axis origin, or draw sub-bars stacked on top of each other, each starting where the last left off.
 
-In the case of barplot of means, there is no meaningful way to combine the selections. If we were to stack the bars on top of each other, the resulting statistic (i.e. the sum of the group means) would not be meaningful. Worse yet, if we were to take the mean of the group means, the resulting statistic will almost surely be different from the mean of the whole: the mean of the group means $\neq$ the grand mean. And again, the grand mean may be less than any one of the group means. Since we cannot meaningfully combine the statistics, we could draw the bars side-by-side, but again, we run into considerations about how to render the base group, the bar width, and the selection.
+There is no such meaningful way to combine means. If we were to stack the bars on top of each other, the resulting statistic (the sum of the group means) would hardly ever be informative. Worse yet, if we were to take the mean of the group means, the resulting statistic will almost surely be different from the mean of the whole: the mean of the group means $\neq$ the grand mean. And again, as was mentioned in the previous section, the grand mean may be less than any one of the group means. Since we cannot meaningfully combine the statistics, we could draw the bars side-by-side, but again, we run into considerations about how to render the base group and the selection, and how to choose the bar width.
 
 ```{r stacking}
 #| echo: false
@@ -428,36 +433,41 @@ axis_fun2()
 
 To summarize, counts, as implemented in a typical barplot, provide:
 
-a. An unambiguous way to display empty selections (absence of a bar is a count of 0)
+a. An unambiguous way to display empty selections (absence of a bar indicates a count of zero)
 b. A stable visual reference (the count within a sub-bar $\leq$ the count within the whole bar)
 c. A way to combine the statistics together (the sum of the sub-bar counts = the count of whole bar). 
 
-Means do not share these nice properties: mean of an empty selection is not defined, the mean of a selection is not always subordinate to the mean of the whole, and the mean of group means is different from the grand mean. Importantly, these properties or lack thereof are not tied to any specific graphic (e.g. a barplot) but are instead tied to the underlying statistic (count/mean).
+Means do not share these nice properties: mean of an empty selection is not defined, the mean of a selection is not always subordinate to the mean of the whole, and the mean of group means is different from the grand mean. Importantly, these properties or lack thereof are not tied to any specific plot type (e.g. a barplot) but are instead tied to the underlying statistic (count/mean).
 
-There are, of course, ways to display means with linked brushing/selection, and some have been described above. The key point, however, is that to display means, more decisions need to be made in order to produce a coherent interactive visualization. Consequently, since no choice is more "natural" than any other, a person who interacts with a linked  barplot of means for the first time may be surprised in how the plot behaves. For the barplot of counts, on the other hand, there *are* such natural solutions readily available, and this may explain why barplots of counts are a popular type of plot in systems which implement linked brushing. 
+We could, of course, think of a way to display means such that linked brushing would be possible in some way. The key point, however, is that to make this kind of interactive visualization, many decisions need to be made in order to produce a visualization that is at least somewhat coherent. Consequently, since many of these decision are somewhat arbitrary and none is more "natural" than any other, a person who interacts with a linked barplot of means for the first time may be surprised in how the plot behaves. For the barplot of counts, on the other hand, there *are* such natural solutions readily available. This may in fact explain why barplots of counts are popular in systems which implement linked brushing - they are popular precisely because they feel natural, in some way. 
 
-One might also wonder if these problems are just a quirk of linked brushing. However, first of all, the problems are not unique to interactive visualizations but arise in static plots as well, with stacking. Second, while they are perhaps the most prominent with linked brushing, we could run into them with any other interactive feature that deals with summary statistics on several parts of the data. If, for example, on top of linked brushing, we wanted to implement a pop-up window that displays summary statistics within a given object as text, we would still have to contend with the problem of what to do in the case of the mean of an empty selection. Here, there is perhaps a simple solution in displaying an `NA` or an empty string for the mean of empty selection. However, we should point out that by doing this, we have to go outside of the type of non-empty selections (real number/float). This may not be a problem in whatever statistical software we are using to render the plots. However, there is still something more natural about counts having the default value (0) be an element of the same type as all other values (integer).       
+One might also wonder if these problems are just a quirk of linked brushing. However, one runs into the same kind of issues in static plots as well, for example with just stacking in general (although here perhaps the issue is not as salient as with linked brushing). Further, we could run into the same issues with any other interactivite features that deal with summary statistics computed on several parts of the data. If, for example, on top of linked brushing, we wanted to implement a pop-up window that displays summary statistics within a given object as text, we would still have to contend with how to display the mean of an empty selection. Here, there is perhaps a simple solution: we could display an `NA`, `undefined`, or an empty string, `""`. However, by doing this, we have to step outside of the value type that non-empty selections have (real number/`float`). Depending on what type of statistical software we use, this may or may not be a problem. However, even if it is not a problem, or there exists some way around the problem (as it most likely does), it still does add complexity to our code, since whatever functions rely on means (such as the display function) now have to be generic over `float` and `NA`/`underfined`/`""`. Conversely, there is something natural about counts having the value for empty selection (zero) be of the same type as all other values (integers).       
 
-Returning to the properties of counts, are counts uniquely "good" in this regard? The short answer is "no". For example, sums or products (of values $\geq 1$) conform to the same nice properties as counts do. In other words, in the context of linked brushing, a stacked barplot will behave equally well if it display sums (not surprising) or products (perhaps somewhat surprising?). In fact, there is whole a class of mathematical functions, or more precisely mathematical structures, that share these nice properties. To discuss these, let's first lay the groundwork with some relevant theory.   
+Returning to the properties of counts, are counts uniquely "good" in this regard? The short answer is "no". For example, sums or products (of values $\geq 1$) conform to the same nice properties we listed above. In other words, in the context of linked brushing, a stacked barplot will behave equally well if it display sums (not surprising) or products (perhaps somewhat surprising?). In fact, there is whole a class of mathematical functions, or more precisely mathematical structures, that share these nice properties. To discuss these, let's first lay the groundwork with some relevant theory.   
 
 # Few Relevant Bits of Category Theory
 
 ## Functions
 
-A function is a mapping between two sets. More specifically, let $S$ be the set of sources (also called the *domain*) and $T$ be the set of possible targets (also called the *codomain*). Then, we can think of a function as a subset $F \subseteq S \times T$ of valid source-target pairs $(s, t)$, such that for every $s \in S$ in there exists a unique $t \in T$ with $(s, t) \in F$. The function then can be thought of as "selecting" a $t$ for any valid $s$ it is given.
+A function is a mapping between two sets. More specifically, let $S$ be the set of sources (also called the *domain*) and $T$ be the set of possible targets (also called the *codomain*). Then, one way to think of a function is as a subset $F \subseteq S \times T$ of valid source-target pairs $(s, t)$, such that for every $s \in S$ in there exists a unique $t \in T$ with $(s, t) \in F$. The function can then be thought of as the process of picking a target for any valid source it is given.
 
-If every target in the function's codomain can be reached via the function, i.e. if for a function $f$ and for all $t \in T$ there exists a $s \in S$ such that $f(s) = t$, then we call the function a *surjective* or *onto* function, Figure \ref{fig:functions}a. If no two sources lead to the same target, i.e. for $s_1, s_2 \in S$, if $f(s_1) = t$ and $f(s_2) = t$, then $s_1 = s_2$, then it is an *injective* or *one-to-one* function, see Figure \ref{fig:functions}b. Also, for any given subset of targets, we can ask about the subset of sources or *pre-image* that could have produced them, i.e. for $T_i \subseteq T$ we can define $f^{-1}(T_i) = \{ s \in S \lvert f(s) \in T_i \}$. Finally, functions can be composed together: if we have two functions $f: X \to Y$ and $g: Y \to Z$, we can combine them into new function $h = g \circ f$ such that $h: X \to Z$, i.e. $h(x) = g(f(x))$.
+If every target in the function's codomain can be reached via the function, that is, if for a function $f$ and for all $t \in T$ there exists a $s \in S$ such that $f(s) = t$, then we call the function a *surjective* or *onto* function, see Figure \ref{fig:functions}a. If each source leads to a unique target, i.e. for $s_1, s_2 \in S$, if $f(s_1) = t$ and $f(s_2) = t$, then $s_1 = s_2$, then it is an *injective* or *one-to-one* function, see Figure \ref{fig:functions}b. Also, for any given subset of targets, we can ask about the subset of sources that could have produced them, a *pre-image*. That is, for $T_i \subseteq T$ we can define $f^{-1}(T_i) = \{ s \in S \lvert f(s) \in T_i \}$. 
+
+If the domain of one function matches the codomain of another, the functions can be composed to form a new function. Specifically, if we have two functions $f: X \to Y$ and $g: Y \to Z$, we can form a new function $h = g(f(x)) = g \circ f$ (read "$g$ after $f$") such that $h: X \to Z$.
 
 ```{r functions}
 #| echo: false
 #| fig-height: 3
-#| fig-cap: Two types of functions. a) Surjective function. b) Injective function.
+#| fig-cap: "Two types of functions: a) surjective, b) injective."
 
 library(gridExtra)
 
 domain_pts1 <- seq(0.25, 0.75, 0.05)
 codomain_pts1 <- seq(0.35, 0.65, 0.05)
 mapping1 <- c(1, 1, 2, 2, 3, 4, 4, 4, 5, 6, 7)
+
+codomain_pts2 <- domain_pts1
+domain_pts2 <- codomain_pts2[-c(1, length(codomain_pts2))]
 
 grid.newpage()
 grid.text("a.", 0.1, 0.9, gp = gpar(fontface = "bold"))
@@ -477,12 +487,12 @@ pushViewport(viewport(x = 0.75, width = 0.5))
 grid.text("b.", 0.1, 0.9, gp = gpar(fontface = "bold"))
 grid.ellipse(0.5, 0.75, 15, pi / 2, 0.2)
 grid.ellipse(0.5, 0.25, 15, pi / 2, 0.2)
-grid.points(domain_pts1, rep(0.75, length(domain_pts1)), 
+grid.points(domain_pts2, rep(0.75, length(domain_pts2)), 
             default.units = "npc")
-grid.points(domain_pts1, rep(0.25, length(domain_pts1)), 
+grid.points(codomain_pts2, rep(0.25, length(codomain_pts2)), 
             default.units = "npc")
-grid.segments(domain_pts1, rep(0.75, length(domain_pts1)),
-              domain_pts1, rep(0.25, length(domain_pts1)),
+grid.segments(domain_pts2, rep(0.75, length(domain_pts2)),
+              domain_pts2, rep(0.25, length(domain_pts2)),
               arrow = arrow(length = unit(0.025, "npc")))
 
 ```
@@ -548,11 +558,11 @@ If $M$ is a preorder, another restriction we may want to impose is that the mono
 
 This means that when we combine two things, we get back something that's at least as big as the bigger of the two things. Summation of natural numbers $(\mathbb{N}, 0, +)$ again works, but for example summation of integers $(\mathbb{Z}, 0, +)$ or multiplication of reals $(\mathbb{R}, 1, \times)$ does not. 
 
-# The Model
+# Outline of the Model
 
 Armed now with some rudimentary theory, we can attempt to describe the data visualization process in more detail. 
 
-## Data and Partitions
+## Data and partitions
 
 We again start with the data $D$ which is just some set of values that may or may not be structured. Ultimately, our goal is to try and learn something new from the data. To this end, we want to create a visualization that will show the information from the data through graphical elements, primarily geometric objects such as points, lines, or areas (we may also use, for example, text/symbols). 
 
@@ -560,9 +570,13 @@ First of all, we need to think about how the information from the data will be d
 
 However, often, we want to compare and contrast different parts of the data. And this is where we have to start to think more deeply about how information should be allocated. For example, it would not be very useful to draw multiple identical geometric objects representing the same information from the data - if all of the objects looked the same, we could learn the same information from any one of them and so it is redundant to have more than one. Instead, we want each object to represent different aspects of the data and so we need to think about slicing the data up along some axis or axes.  
 
-Often, the axes along which we can slice the data can already be present in its structure. For example, a lot of data comes organized in a tabular $R \times C$ format where $R$ is the set of rows and $C$ is the set of columns (and $R \times C$ are the cells), and so we could use any of these three sets as the basis for drawing our geometric objects. This is shown in Figure \@ref(fig:partitioning). Notice that, when slicing along rows $R$, the number of objects (points) is equal to their cardinality: $\textbf{\# objects} = \lvert R \lvert$. Likewise, when slicing along columns, $\textbf{\# objects} = \lvert C \lvert$, and when slicing along cells, $\textbf{\# objects} = \lvert R \times C \lvert$.
+Often, there are some axes along which we can slice already present in the structure of the data. For example, a lot of data comes organized in a tabular $R \times C$ format where $R$ is the set of rows and $C$ is the set of columns (and $R \times C$ are the cells), and so we could use any of these three sets as the basis for drawing our geometric objects. This is shown in Figure \@ref(fig:partitioning). Notice that, when slicing along rows $R$, the number of objects (points) is equal to their cardinality: $\textbf{\# objects} = \lvert R \lvert$. Likewise, when slicing along columns, $\textbf{\# objects} = \lvert C \lvert$, and when slicing along cells, $\textbf{\# objects} = \lvert R \times C \lvert$.
 
-```{r partitioning, echo=FALSE, fig.height=4, fig.cap="Three different ways of partitioning a tabular data set. a) The underlying data set, represented as a matrix with 3 rows and 2 columns. b) In scatterplot, we can slice along the rows and draw points at the x- and y-position given by the columns. c) In lineplot, we can slice along the columns & draw lines by connecting points given by the corresponding row values. d) In a dotplot, we can slice along both rows and columns and draw points at given row and column index, with point size given by the corresponding cell value."}
+```{r partitioning}
+
+#| echo: FALSE
+#| fig.height: 4
+#| fig.cap: "Three ways of partitioning a tabular data set. a) The underlying data, represented as a matrix with 3 rows and 2 columns. b) To draw a scatterplot, we can slice along the rows and draw points at the x- and y-position given by the columns. c) To draw a lineplot, we can slice along the columns & draw lines by connecting points given by the corresponding row values. d) To draw a dotplot, we can slice along both rows and columns and draw points at given row and column index, with point size given by the corresponding cell value."}
 
 library(gridExtra)
 
@@ -639,11 +653,88 @@ Now that we have split the data into parts, within hierarchical/nested partition
 
 ### Reduce
 
-It is most likely preferable to avoid having to iterate through all $n$ units of data more than once. As such, the function that computes the summary for each part should be a *reduce* function, i.e. initialize $k$ values and then loop through the data and repeatedly update each of them whenever we come across a data unit that belongs to a corresponding part, as if computing a running total but keeping track of only the latest value. For example, suppose we are computing the summaries for a barplot with three bars $A$, $B$, and $C$. We may initialize the values as 0's, i.e. $\{ A: 0; B: 0; C: 0 \}$, and the walk the data one data unit at a time, each time incrementing the corresponding value. For example, encountering the data $\{ A, A, B, A, B, C, \ldots \}$ would sequentially produce $\{ A: 1; B: 0; C: 0 \}$, $\{ A: 2; B: 0; C: 0 \}$, $\{ A: 2; B: 1; C: 0 \}$, $\{ A: 3; B: 1; C: 0 \}$, $\{ A: 3; B: 2; C: 0 \}$, $\{ A: 3; B: 2; C: 1 \}$,... 
+It is preferable to avoid having to iterate through all $n$ units of data more than once. As such, the function that computes the summary for each part should be a *reduce* function, i.e. initialize $k$ values and then loop through the data and repeatedly update each of them whenever we come across a data unit that belongs to a corresponding part, as if computing a running total but keeping track of only the latest value. For example, suppose we are computing the summaries for a barplot with three bars $A$, $B$, and $C$. We may initialize the values as 0's, i.e. $\{ A: 0; B: 0; C: 0 \}$, and the walk the data one data unit at a time, each time incrementing the corresponding value. For example, encountering the data $\{ A, A, B, A, B, C, \ldots \}$ would lead to the following series of updates: $\{ A: 1; B: 0; C: 0 \}$, $\{ A: 2; B: 0; C: 0 \}$, $\{ A: 2; B: 1; C: 0 \}$, $\{ A: 3; B: 1; C: 0 \}$, $\{ A: 3; B: 2; C: 0 \}$, $\{ A: 3; B: 2; C: 1 \}$,... We may compute initialize and update multiple statistics for each part, for example, we may at the same time want to compute the count, sum, product, etc... 
 
-We may compute multiple statistics
+```{r}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: "Schematic of the reduce operation: we iterate through $n$ datapoints, updating the corresponding collection of summaries (one of $k$) at each step."
 
+x0 <- seq(0.1, 0.8, by = 0.1)
+x1 <- seq(0.2, 0.9, by = 0.1)
 
+xparts <- seq(0.2, 0.8, by = 0.2)
+part <- c(1, 2, 2, 2, 1, 3, 3, 4)
+
+grid.newpage()
+grid.text("k collections", 0.5, 0.9)
+grid.rect(0.5, 0.25, 1, 0.2, gp = gpar(fill = "grey90", col = NA))
+grid.segments(0, 0.35, 1, 0.35, arrow = arrow1)
+grid.segments(0, 0.15, 1, 0.15, arrow = arrow1)
+grid.circle(xparts, 0.75, r = 0.1, gp = gpar(fill = "white"))
+grid.circle(x0, 0.25, r = 0.05, gp = gpar(fill = "white"))
+grid.text("...", 0.9, 0.25)
+grid.segments(x0, 0.25, xparts[part], 0.75,
+              arrow = arrow1)
+grid.text("Iterating n datapoints", 0.5, 0.1)
+
+```
+
+One may notice that the statistics computed in this reduce step have to meet the definition of a monoid. Indeed, we need to initialize the summary with some initial/default value and then, in each step of the loop, compute the monoidal product of the current summary value and the next data value. This has the advantage the we only need a single pass through the data. However, there is an even deeper advantage beyond this. If the summaries we compute on one level of a partition meet the definition of a monoid, then the values of the summaries of each part are equal to the monoidal product on the corresponding child-parts on the child partition. That is, for example, the statistic in each sub-bar of a barplot bar will "add up" to the statistic on the whole bar. More on this in section [REF].
+
+### Map and Stack
+
+Beyond iterating across the $n$ data units, we may also want to iterate across the $k$ collections of summaries, once we have them. There are two reasons. First, we may want to *map* (translate) each collection somehow. For example, we may want to normalize the summaries (possibly by parent-part values), translate them to graphical attributes/coordinates, etc... This operation takes each collection of summaries and returns new, mapped collection.
+
+```{r}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: "Schematic of the map operation: we iterate through the $k$ collections of summaries, translating each collection at each step."
+
+x0 <- seq(0.1, 0.8, by = 0.1)
+x1 <- seq(0.2, 0.9, by = 0.1)
+
+xparts <- seq(0.2, 0.8, by = 0.2)
+
+grid.newpage()
+grid.text("k mapped collections", 0.5, 0.9)
+grid.rect(0.5, 0.25, 1, 0.3, gp = gpar(fill = "grey90", col = NA))
+grid.segments(0, 0.4, 1, 0.4, arrow = arrow1)
+grid.segments(0, 0.1, 1, 0.1, arrow = arrow1)
+grid.circle(xparts, 0.75, r = 0.1, gp = gpar(fill = "white"))
+grid.circle(xparts, 0.25, r = 0.1, gp = gpar(fill = "white"))
+grid.segments(xparts, 0.25, xparts, 0.75, arrow = arrow1)
+grid.text("Iterating k collections", 0.5, 0.05)
+
+```
+
+We may also want to *stack* some summaries/attributes on top of each other, as in the case of stacked barplot bars. This is somewhat more challenging, since we need to stack the appropriate summaries together. For example, if we have 6 collections of summaries, representing the product of $\textbf{gender} = (male, female)$ and $\textbf{group} = (A, B, C)$ factors - $\{ (male; A), (male; B), (male; C), (female; A), (female; b), (female; C) \}$ - we need to stack collections which belong to $male$ together and collections which belong to $female$ together, respectively, and in the order of the groups: $A, B, C$. To do this, the collections should: a) be ordered appropriately, and b) each have a reference to the parent collection. We can achieve this as follows. First, assuming that the two factors which constitute the product factor have $k_1$ and $k_2$ levels, indexed by integers $i_1$ and $i_2$, respectively, we can define the product factor index as: $i_3 = k_2 \times i_1 + i_2$. This will guarantee that the levels have first-factor-major order (i.e. $\{ (male; A), (male; B), \ldots \}$, as outlined above). Second, each collection of summaries should include a reference to the parent collection, such that, for example the $(male; A)$ collection has reference to $male$, $(female; C)$ has reference to $female$, etc... Then, if we let $c$ be the child partition and $p$ be the parent partition, we can perform stacking as follows: let $c_{copy}$ be copy of the values of $c$, set $c = p$, update $p$ by $c_{copy}$ values.       
+
+```{r}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: "Schematic of the stack operation: we iterate through the $k$ collections of summaries, each time first setting the collection values to the parent values and then updating the parent values by the collection values."
+
+x0 <- seq(0.1, 0.8, by = 0.1)
+x1 <- seq(0.2, 0.9, by = 0.1)
+
+xparentparts <- c(1/3, 2/3)
+parentpart <- c(1, 1, 1, 2)
+
+grid.newpage()
+grid.text("parent collections", 0.5, 0.9)
+grid.rect(0.5, 0.25, 1, 0.3, gp = gpar(fill = "grey90", col = NA))
+grid.segments(0, 0.4, 1, 0.4, arrow = arrow1)
+grid.segments(0, 0.1, 1, 0.1, arrow = arrow1)
+grid.circle(xparentparts, 0.75, r = 0.1, gp = gpar(fill = "white"))
+grid.circle(xparts, 0.25, r = 0.1, gp = gpar(fill = "white"))
+grid.segments(xparentparts[parentpart] - 0.03, 0.75, xparts, 0.25, arrow = arrow1)
+grid.segments(xparts, 0.25, xparentparts[parentpart] + c(0, 1, 2, 0) * 0.01, 0.75, arrow = arrow1)
+grid.text("Iterating k collections", 0.5, 0.05)
+
+```
+
+The map and stack operations can both be performed within a single step of a loop through the $k$ collections. Further, since the cardinality of the parts will typically be smaller or at most as big as the cardinality of the data (if there is no reduce step), $k \leq n$, the whole operation should usually be quite cheap.    
 
 <!-- ## Create Partitions: Partition -->
 
@@ -667,7 +758,12 @@ We may compute multiple statistics
 
 <!-- Symmetric monoidal preorders also come with some4 computational advantages. Firstly, these summaries are guaranteed to be computable within a single pass through the data, and can also be updated online if new data arrives, without having to refer to the old. This does not necessarily make them superior to other summaries, such as mean or variance, which can also often be computed by collecting multiple constituent summaries in a single pass through the data and them combining them together in one step after (such as sum and count for the mean), and for which online algorithms also often exist too. However, the advantage is that every symmetric monoidal preorder is automatically single pass computable and online - we will never need to look for an algorithm. Secondly, if our plot implements reactive axis limits, since the count within the selection is always guaranteed to be less that or equal to the count within the whole, we only need to keep track of the counts on the whole. For example, in the case of the barplot of counts, we know that the upper y-axis limit will always be equal to the height of the tallest whole bar, and we can safely ignore the sub-bars. If there are $N$ levels of the categorical variable and $K$ selection groups, there will be $N$ whole bars and $N \times K$ sub-bars. This difference might unimportant if $N$ and $K$ are small (as they are likely to be, in the case of the average barplot). However, if there are, for example, two categorical variables with $N$, and $M$ levels, respectively, as in the case of a fluctuation diagram/bubbleplot/treemap, and both $N$ and $M$ have many levels, then having to iterate through all $N \times M \times K$ sub-bar summaries every time an interaction happens might become prohibitive.    -->
 
-```{r process, out.width="6in", out.height="3in", fig.align='center', echo=FALSE}
+```{r process, }
+#| echo: false
+#| fig-cap: "Illustration of the model structure. Data is split into a hierarchy of partitions (left). Parts within partitions form a graph/tree that can be used to calculate summaries/statistics (middle). Finally, the hierarchy of summaries is plotted via geometric objects (right)."
+#| out.width: "6in"
+#| out.height: "3in"
+#| fig.align: 'center'
 
 knitr::include_graphics("process.png")
 

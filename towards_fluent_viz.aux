@@ -22,30 +22,30 @@
 \newlabel{what-do-we-interact-with}{{1.1}{2}{What do we interact with?}{subsection.1.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Rough sketch of the data visulization process}{2}{subsection.1.2}\protected@file@percent }
 \newlabel{rough-sketch-of-the-data-visulization-process}{{1.2}{2}{Rough sketch of the data visulization process}{subsection.1.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Why summaries matter}{3}{subsection.1.3}\protected@file@percent }
-\newlabel{why-summaries-matter}{{1.3}{3}{Why summaries matter}{subsection.1.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Summaries as first-class citizens}{3}{subsection.1.3}\protected@file@percent }
+\newlabel{summaries-as-first-class-citizens}{{1.3}{3}{Summaries as first-class citizens}{subsection.1.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Histogram and spineplot use the same summaries but encode them in different ways. a) In histogram, the x-axis display bin breaks and y-axis displays count, stacked across groups (failure/no failure). b) In spineplot, the x-axis and y-axis both display count; the x-axis shows count stacked across bins, whereas the y-axis shows count stacked across groups and scaled by the total bin count (such that the total bin height = 1). The bin breaks are displayed as x-axis labels (however, the underlying summary is still stacked count).}}{4}{figure.1}\protected@file@percent }
 \newlabel{fig:histospine}{{1}{4}{Histogram and spineplot use the same summaries but encode them in different ways. a) In histogram, the x-axis display bin breaks and y-axis displays count, stacked across groups (failure/no failure). b) In spineplot, the x-axis and y-axis both display count; the x-axis shows count stacked across bins, whereas the y-axis shows count stacked across groups and scaled by the total bin count (such that the total bin height = 1). The bin breaks are displayed as x-axis labels (however, the underlying summary is still stacked count)}{figure.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.4}A couple of caveats}{4}{subsection.1.4}\protected@file@percent }
 \newlabel{a-couple-of-caveats}{{1.4}{4}{A couple of caveats}{subsection.1.4}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {2}Interactivity and Hierarchy}{5}{section.2}\protected@file@percent }
 \newlabel{interactivity-and-hierarchy}{{2}{5}{Interactivity and Hierarchy}{section.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}The Problem of Statistical Summaries}{5}{section.3}\protected@file@percent }
-\newlabel{the-problem-of-statistical-summaries}{{3}{5}{The Problem of Statistical Summaries}{section.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Reactive hierarchy in a stacked histogram. When selection changes (as a result of linked brushing), we do not need to recompute bins (since these depend just on the data, anchor, and binwidth). Instead, we only need to recompute count within each sub-bar, defined by combinations of bin and group. However, when either anchor or binwidth change, we do need to recompute the bins, and as a result counts as well.}}{6}{figure.2}\protected@file@percent }
-\newlabel{fig:hierarchy}{{2}{6}{Reactive hierarchy in a stacked histogram. When selection changes (as a result of linked brushing), we do not need to recompute bins (since these depend just on the data, anchor, and binwidth). Instead, we only need to recompute count within each sub-bar, defined by combinations of bin and group. However, when either anchor or binwidth change, we do need to recompute the bins, and as a result counts as well}{figure.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Reactive hierarchy in a stacked histogram. When selection changes (as a result of linked brushing), we do not need to recompute bins, since these depend just on the data, anchor, and binwidth (= parent nodes). Instead, we only need to recompute count within each sub-bar, defined by combinations of bin and group. However, when either anchor or binwidth change, we do need to recompute the bins, and as a result counts as well (= child nodes).}}{6}{figure.2}\protected@file@percent }
+\newlabel{fig:hierarchy}{{2}{6}{Reactive hierarchy in a stacked histogram. When selection changes (as a result of linked brushing), we do not need to recompute bins, since these depend just on the data, anchor, and binwidth (= parent nodes). Instead, we only need to recompute count within each sub-bar, defined by combinations of bin and group. However, when either anchor or binwidth change, we do need to recompute the bins, and as a result counts as well (= child nodes)}{figure.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}The Problem of Statistical Summaries}{7}{section.3}\protected@file@percent }
+\newlabel{the-problem-of-statistical-summaries}{{3}{7}{The Problem of Statistical Summaries}{section.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Case study: Counts and Means}{7}{subsection.3.1}\protected@file@percent }
 \newlabel{case-study-counts-and-means}{{3.1}{7}{Case study: Counts and Means}{subsection.3.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces The problem of representing empty selection. a) An illustration of selection by linked brushing. b) In the barplot of counts, the count within an empty selection (red) is zero and so an absence of a bar accurately represents a count of zero. c) In the barplot of means, the mean of an empty selection is not defined. Absence of a bar could indicate that either no cases are selected or some cases are selected and their mean is equal to the lower y-axis limit.}}{7}{figure.3}\protected@file@percent }
-\newlabel{fig:empty}{{3}{7}{The problem of representing empty selection. a) An illustration of selection by linked brushing. b) In the barplot of counts, the count within an empty selection (red) is zero and so an absence of a bar accurately represents a count of zero. c) In the barplot of means, the mean of an empty selection is not defined. Absence of a bar could indicate that either no cases are selected or some cases are selected and their mean is equal to the lower y-axis limit}{figure.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces The problem of representing empty selection. a) An illustration of selection by linked brushing. b) In the barplot of counts, the count within an empty selection (red) is zero and so an absence of a bar accurately represents a count of zero. c) In the barplot of means, the mean of an empty selection is not defined. Absence of a bar could indicate that either no cases are selected or some cases are selected and their mean is equal to the lower y-axis limit (zero in this case).}}{7}{figure.3}\protected@file@percent }
+\newlabel{fig:empty}{{3}{7}{The problem of representing empty selection. a) An illustration of selection by linked brushing. b) In the barplot of counts, the count within an empty selection (red) is zero and so an absence of a bar accurately represents a count of zero. c) In the barplot of means, the mean of an empty selection is not defined. Absence of a bar could indicate that either no cases are selected or some cases are selected and their mean is equal to the lower y-axis limit (zero in this case)}{figure.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Empty selections}{7}{subsection.3.2}\protected@file@percent }
 \newlabel{empty-selections}{{3.2}{7}{Empty selections}{subsection.3.2}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces The relationship between selection vs.\nobreakspace  {}the whole. a) An illustration of selection by linked brushing. b) In the barplot of counts (middle), the count within a selection (red) is always less than or equal to the count within the whole and the outline of the bars does not change. c) In the barplot of means, the mean of a selection can be greater and so the outline of the bars will change in response to user input.}}{8}{figure.4}\protected@file@percent }
 \newlabel{fig:bigger}{{4}{8}{The relationship between selection vs.~the whole. a) An illustration of selection by linked brushing. b) In the barplot of counts (middle), the count within a selection (red) is always less than or equal to the count within the whole and the outline of the bars does not change. c) In the barplot of means, the mean of a selection can be greater and so the outline of the bars will change in response to user input}{figure.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Part vs.\nobreakspace  {}the whole}{8}{subsection.3.3}\protected@file@percent }
 \newlabel{part-vs.-the-whole}{{3.3}{8}{Part vs.~the whole}{subsection.3.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Combining parts}{8}{subsection.3.4}\protected@file@percent }
-\newlabel{combining-parts}{{3.4}{8}{Combining parts}{subsection.3.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Combining parts}{9}{subsection.3.4}\protected@file@percent }
+\newlabel{combining-parts}{{3.4}{9}{Combining parts}{subsection.3.4}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Combining selections. a) An illustration of selection by linked brushing, with two groups. b) In the barplot of counts, statistics can be stacked on top of each other such that the count of the stacked bar is identical to the count of the whole bar (i.e.\nobreakspace  {}one that would result from no selections). c) In the barplot of means, no such procedure for combining statistics exists.}}{9}{figure.5}\protected@file@percent }
 \newlabel{fig:stacking}{{5}{9}{Combining selections. a) An illustration of selection by linked brushing, with two groups. b) In the barplot of counts, statistics can be stacked on top of each other such that the count of the stacked bar is identical to the count of the whole bar (i.e.~one that would result from no selections). c) In the barplot of means, no such procedure for combining statistics exists}{figure.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Some statistics are better than others}{9}{subsection.3.5}\protected@file@percent }
@@ -54,22 +54,30 @@
 \newlabel{few-relevant-bits-of-category-theory}{{4}{10}{Few Relevant Bits of Category Theory}{section.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Functions}{10}{subsection.4.1}\protected@file@percent }
 \newlabel{functions}{{4.1}{10}{Functions}{subsection.4.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Partitions}{10}{subsection.4.2}\protected@file@percent }
-\newlabel{partitions}{{4.2}{10}{Partitions}{subsection.4.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Two types of functions. a) Surjective function. b) Injective function.}}{11}{figure.6}\protected@file@percent }
-\newlabel{fig:functions}{{6}{11}{Two types of functions. a) Surjective function. b) Injective function}{figure.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Two types of functions: a) surjective, b) injective.}}{11}{figure.6}\protected@file@percent }
+\newlabel{fig:functions}{{6}{11}{Two types of functions: a) surjective, b) injective}{figure.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Partitions}{11}{subsection.4.2}\protected@file@percent }
+\newlabel{partitions}{{4.2}{11}{Partitions}{subsection.4.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Preorders}{11}{subsection.4.3}\protected@file@percent }
 \newlabel{preorders}{{4.3}{11}{Preorders}{subsection.4.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Monoids}{12}{subsection.4.4}\protected@file@percent }
 \newlabel{monoids}{{4.4}{12}{Monoids}{subsection.4.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}The Model}{13}{section.5}\protected@file@percent }
-\newlabel{the-model}{{5}{13}{The Model}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Data and Partitions}{13}{subsection.5.1}\protected@file@percent }
-\newlabel{data-and-partitions}{{5.1}{13}{Data and Partitions}{subsection.5.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Three different ways of partitioning a tabular data set. a) The underlying data set, represented as a matrix with 3 rows and 2 columns. b) In scatterplot, we can slice along the rows and draw points at the x- and y-position given by the columns. c) In lineplot, we can slice along the columns \& draw lines by connecting points given by the corresponding row values. d) In a dotplot, we can slice along both rows and columns and draw points at given row and column index, with point size given by the corresponding cell value.}}{14}{figure.7}\protected@file@percent }
-\newlabel{fig:partitioning}{{7}{14}{Three different ways of partitioning a tabular data set. a) The underlying data set, represented as a matrix with 3 rows and 2 columns. b) In scatterplot, we can slice along the rows and draw points at the x- and y-position given by the columns. c) In lineplot, we can slice along the columns \& draw lines by connecting points given by the corresponding row values. d) In a dotplot, we can slice along both rows and columns and draw points at given row and column index, with point size given by the corresponding cell value}{figure.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Computing Statistics}{15}{subsection.5.2}\protected@file@percent }
-\newlabel{computing-statistics}{{5.2}{15}{Computing Statistics}{subsection.5.2}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.1}Reduce}{15}{subsubsection.5.2.1}\protected@file@percent }
-\newlabel{reduce}{{5.2.1}{15}{Reduce}{subsubsection.5.2.1}{}}
-\gdef \@abspage@last{16}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Outline of the Model}{13}{section.5}\protected@file@percent }
+\newlabel{outline-of-the-model}{{5}{13}{Outline of the Model}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Data and partitions}{13}{subsection.5.1}\protected@file@percent }
+\newlabel{data-and-partitions}{{5.1}{13}{Data and partitions}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Computing Statistics}{16}{subsection.5.2}\protected@file@percent }
+\newlabel{computing-statistics}{{5.2}{16}{Computing Statistics}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.1}Reduce}{16}{subsubsection.5.2.1}\protected@file@percent }
+\newlabel{reduce}{{5.2.1}{16}{Reduce}{subsubsection.5.2.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Schematic of the reduce operation: we iterate through \(n\) datapoints, updating the corresponding collection of summaries (one of \(k\)) at each step.}}{17}{figure.7}\protected@file@percent }
+\newlabel{fig:unnamed-chunk-1}{{7}{17}{Schematic of the reduce operation: we iterate through \(n\) datapoints, updating the corresponding collection of summaries (one of \(k\)) at each step}{figure.7}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.2}Map and Stack}{17}{subsubsection.5.2.2}\protected@file@percent }
+\newlabel{map-and-stack}{{5.2.2}{17}{Map and Stack}{subsubsection.5.2.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Schematic of the map operation: we iterate through the \(k\) collections of summaries, translating each collection at each step.}}{18}{figure.8}\protected@file@percent }
+\newlabel{fig:unnamed-chunk-2}{{8}{18}{Schematic of the map operation: we iterate through the \(k\) collections of summaries, translating each collection at each step}{figure.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Schematic of the stack operation: we iterate through the \(k\) collections of summaries, each time first setting the collection values to the parent values and then updating the parent values by the collection values.}}{19}{figure.9}\protected@file@percent }
+\newlabel{fig:unnamed-chunk-3}{{9}{19}{Schematic of the stack operation: we iterate through the \(k\) collections of summaries, each time first setting the collection values to the parent values and then updating the parent values by the collection values}{figure.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Illustration of the model structure. Data is split into a hierarchy of partitions (left). Parts within partitions form a graph/tree that can be used to calculate summaries/statistics (middle). Finally, the hierarchy of summaries is plotted via geometric objects (right).}}{19}{figure.10}\protected@file@percent }
+\newlabel{fig:process}{{10}{19}{Illustration of the model structure. Data is split into a hierarchy of partitions (left). Parts within partitions form a graph/tree that can be used to calculate summaries/statistics (middle). Finally, the hierarchy of summaries is plotted via geometric objects (right)}{figure.10}{}}
+\gdef \@abspage@last{19}
