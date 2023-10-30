@@ -1,0 +1,74 @@
+---
+title: "Towards Fluent Interactive Data Visualization"
+author: "Adam Bartonicek"
+date: "`r Sys.Date()`"
+output: bookdown::pdf_document2
+editor_options: 
+  chunk_output_type: console
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+Interactive data visualization (IDV) has seen a rapid growth in popularity over the last few decades. From the humble roots of early, highly specialized systems, such as those of @fowlkes1969 and @kruskal1964, there has been a steady progress towards more and more general and feature-rich frameworks. The first really "general-purpose" system was *PRIM-9* [@fisherkeller1974], which allowed for exploration of high-dimensional data in scatterplots using projection, rotation, subsetting and masking. Later systems, such as *MacSpin* [@donoho1988], *Lisp-Stat* and *XLisp-Stat* [@tierney1989; @tierney2004], and *XGobi* [@swayne1998] provided rich features such as interactive scaling, rotation, linked selection (or "brushing"), and interactive plotting of smooth fits in scatterplots, as well as interactive parallel coordinate plots and grand tours. They were later followed by other systems such as *Mondrian* [@theus2002], *GGobi* [@swayne2003], *iPlots* [@urbanek2003], and *cranvas* [@xie2014]. Alongside these later developments, which have largely come from the field of statistics, the rise of Web technologies and interactive web apps has spawned its own family of IDV systems. Among these, the earlier systems such as *Prefuse* [@heer2005] and *Flare* [@flare2020] relied on external plugins (Java and Adobe Flash Player, respectively) while later systems became truly Web-native by embracing JavaScript. Among them, *D3*.js [@bostock2011] has grown to great popularity, alongside its high-level interface *plotly*.js,  [@plotly2022], and so have other frameworks such as *Vega* [@satyanarayan2015], *Vega-lite* [@satyanarayan2016], *Altair* [@vanderplas2018], and *Highcharts* [@highcharts2023].  
+
+Interactive figures now frequently appear in online news articles, business dashboards, and scientific publications and blogs. Yet, despite the proliferation of IDV systems and various taxonomies of interactive features [see e.g. @yi2007], there seems to remain a lack of a general framework for reasoning about interactive data visualizations, in the way that e.g. *grammar of graphics* [@wilkinson2012] provided a way to reason about static visualizations. That is, interactive data visualizations, like all visualizations, require us to process data into statistical summaries that can then be translated into screen coordinates and drawn. However, different types of interaction require vastly different . Some interactions can be implemented by manipulating graphical attributes of the visualization only. For example, to implement panning or zooming, all we need to do is compute the axis limits from the data once. After that, we can forget the original data and merely update the four scalar values (= lower and upper x-axis and y-axis limits) whenever the user performs the requisite actions. However, this is not the case for other, more complex types of interactions. For example, if we want to implement an interactive histogram in which the user can change the binwidth and anchor, we need a way to recompute the number of cases in each bin after either of the two parameters is updated. This means that we have to refer to the original data. Similarly, to implement linked highlighting/brushing, whereby the user can highlight some cases in the data across multiple plots by either clicking or click-and-drag-selecting the corresponding geometric objects in one plot, we need to keep track of which cases belong to which object. 
+
+How should we structure the process of computing summary statistics and translating them into graphical coordinates, such that we can do this efficiently in response to user input? @wickham2009 have called for an IDV pipeline or "plumbing". This call has, despite some attempts [e.g. @xie2014], been left largely unaddressed. 
+
+# The illusion of objects
+
+
+The  key towards a general IDV framework may lie in a subtle yet profound question that inevitably appears in the production and use of interactive data visualizations: *when we interact with a plot, what exactly are we interacting with?* On its face, it may seem trivial. A person clicking a bar in an interactive barplot may be convinced that they are interacting with the coloured rectangle on the screen, since, by design, that is the salient "thing" they see change in front of them. And in some way, this is true - by interacting with the bar, we can affect its graphical attributes: we can change its colour, we can squeeze it/stretch it, and so on. Yet, in another, deeper way, this perception of interacting with a plain geometric object is just an illusion. How so? 
+
+The illusion lies in the fact that the bar is not just the geometric object - the coloured rectangle - it is represented by. Instead, the rectangle is only ever meaningful as a "bar" within the context of the plot. We can see this quite easily - if we were to take the coloured rectangle outside of the plot, we would lose some crucial information that the rest of the plot provides.  
+
+```{r}
+#| echo: false
+#| out-height: "2in"
+#| fig-align: "center"
+#| fig-cap: "A rectangle is not a bar in a similar way that a painting of a pipe is not a pipe."
+
+knitr::include_graphics("magritte.jpg")
+
+```
+
+Thus, objects in a plot are imbued with some additional information or structure, beyond their simple geometry. That statement should not seem surprising or controversial to people familiar with data visualization, and indeed geometric objects are considered just one "layer" in, e.g. the *grammar of graphics* [@wilkinson2012]. However, it may be more challenging to define in detail what exactly this "structure" is. There are a few ideas we may be able to muster. First of all, we know that the geometric objects in plots are supposed to represent some underlying data. That much is clear - if the objects in a graphic do not represent any external data but are instead drawn according to some arbitrary rules, we cannot really, in good conscience, call the resulting graphic a "plot". But data is only a part of the story. 
+
+When drawing plots, we rarely represent the raw data directly. Instead, we often summarize, aggregate, or transform. We do this by applying mathematical functions such as count, sum, mean, log, or the quantile function. And it is the output of these transformations that we then represent by the geometric objects. 
+
+So, when interacting with a bar in an interactive barplot, we do not just interact with a plain geometric object. Instead, we interact with a mathematical function, or, in fact, several of them. This is very important since mathematical functions have properties, and these properties impose limits on what kinds of visualizations and interactions we can meaningfully compose. This is the crux of the argument presented in this text. Before diving deeper, however, let's first define some key terms and draw a rough sketch of the data visualization process as a whole. 
+
+# Rough sketch of the data visualization process
+
+To create a data visualization, be it static or interactive, we need several ingredients: data, summaries, scales/coordinate systems, and geometric objects. These should be familiar to most users of interactive data visualization systems. However, it may still be useful to lay them out in order, and examine the specific features and quirks of each one of them.     
+
+First of all, as was mentioned in the previous section, every data visualization needs to be built on top of some underlying data. We can represent this as a set of some arbitrary units of information (data) $D$. Data in the wild usually comes with more structure than that - for example, we often encounter data stored in a tabular ( or "tidy" [@wickham2014]) format, stratified by rows and columns. In that case, we could substitute $D$ by the set of rows $R$, the set of columns $C$, or the set of cell values $R \times C$ (where $\times$ indicates the cartesian product). However, for the purpose of this broad description, we do not have to assume any special structure and just speak of the data units $d \in D$.  
+
+Secondly, at some point during the visualization process, we need to transform the set of data units $D$ into a set of collections of summaries $S$ via a function $\alpha$. The summarizing function $\alpha$ can have many different flavours. It may be the case that $\alpha$ is one-to-one (bijection), in which case there is one summary for every unit of data (and vice versa). This is the case, for example, with the prototypical scatterplot, in which $\alpha$ is just the identity function (every unit of data/row gets assigned one "point"). However, more often, $\alpha$ is many-to-one (surjection), which means that each summary may be composed of multiple units of data. Examples of this include the typical barplot, histogram, density plot, or violin plot. When $\alpha$ is many-to-one, it will typically reduce the cardinality of the data, such that $\lvert S \lvert \leq \lvert D \lvert$ (e.g. in a typical barplot, there will be fewer bars than there are rows of the data, unless each row represents a unique level of the categorical variable). To turn $n$ units of data into $k$ collections of summaries, we need to somehow stratify the data on one or more variables. These variables may either come from the data directly (i.e. the variables used are "factors", as in the case of a barplot or a treemap) or may themselves be a summary of the data (as in the case of histogram bins). Importantly also, each collection of summaries $s \in S$ may (and usually will) hold multiple values, produced by a different constituent function each - for example, the collection $s$ for a single boxplot "box" will consist of the median, the first and third quartile, the minimum and maximum, and the outlier values of some variable, all for a given level of some stratifying variable (which itself will also be an element of $s$). Finally, the output of these constituent functions may also depend on some external parameters, which may be either directly supplied by the user or heuristically inferred from the data by the visualization system itself. Examples of such external parameters include anchor and binwidth in a histogram.
+
+Thirdly, each collection of summaries $s \in S$ needs to be translated from the data- (or summary-) coordinates to graphical coordinates/attributes $g \in G$, via a function $\beta$. This means that each summary value gets mapped or "scaled" to a graphical attribute via a constituent scaling function. Note that this mapping preserves cardinality - there are as many collections of graphical attributes as there are collections of summaries, $\lvert G \lvert = \lvert S \lvert$. For numeric/continuous summaries, scales often come in the form of linear transformations, such that the minimum and maximum of the data are mapped near the minimum and maximum of the plotting region, respectively. Continuous scales may also provide non-linear transformations such as the log-transformation or binning, and the values may even get mapped to discrete graphical attributes (e.g. binned values may get translated to one of 5 different shades of a colour). Likewise, discrete summaries can be translated to either continuous (e.g. position) or discrete (e.g. colour) graphical attributes. There are also coordinate systems, which may further translate values from multiple scales simultaneously, e.g. by taking values in cartesian (rectangular plane) coordinates and translating them to polar (radial) coordinates. Either way, $\beta$ can be viewed as one function, representing the composition of any number of scales and coordinate systems applied to various summaries.  
+
+Finally, the collections of graphical attributes/coordinates $g \in G$ are drawn as geometric objects inside the plotting region, which we can represent as the set of pixels $P$. While the act of drawing does take the collections of graphical coordinates $g \in G$ as inputs, it does not simply return an output for each input (like a mathematical function would), but instead mutates the state of the graphical device via a side effect $\gamma^*$, i.e. changing the colour values of pixels in $P$. In other words, how the graphic ends up looking may depend, for example, on the order in which we draw the objects. For example, when drawing points of different colour, some points may end up being plotted over others, and thus the final result may depend on whether we draw red points first and yellow second or vice versa. As such, $\gamma^*$ is not a simple mapping from $G$ to $P$ and we cannot call it a true mathematical function (since that would require it to merely assign an output to each input). The geometric objects may be simple, such as points, lines, or bars, or compound, such as a boxplot or pointrange. Importantly, each attribute necessary to draw the geometric object, such as x- and y-position, width, height, area, etc... needs to be present in the corresponding $g$.     
+
+The whole process can be summarized as follows:
+
+\begin{equation}
+D \overset{\alpha}{\to} S \overset{\beta}{\to} G \overset{\gamma^*}{\Rightarrow} P ((\#eq:recipe1)
+\end{equation}
+
+Or, equivalently: 
+
+\begin{equation}
+\text{(data)} \overset{\text{summarize}}{\longrightarrow} \text{(summaries)} \overset{\text{translate/encode}}{\longrightarrow} \text{(graph. coordinates)} \overset{\text{draw}^*}{\Rightarrow} \text{(graph. device state)} (\#eq:recipe2)
+\end{equation}
+
+The above should be fairly non-controversial description of how a data visualization is produced, and applies equally well to static as well as interactive visualizations. 
+
+
+
+# References

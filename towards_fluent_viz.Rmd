@@ -5,6 +5,7 @@ date: "`r Sys.Date()`"
 output: bookdown::pdf_document2
 editor_options: 
   chunk_output_type: console
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -13,51 +14,78 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-## What's in a plot?
+Interactive data visualization is becoming increasingly popular. Interactive figures frequently appear in online news articles, business dashboards, and scientific publications and blogs.      
+
+Different interactive features can involve vastly different levels of computational complexity. Some types of interaction can be implemented by manipulating the graphical attributes of the visualization only, without referring to the original data. For example, to implement panning or zooming, all we need to do is compute the axis limits from the data once and then merely update the four scalar values (lower and upper x-axis and y-axis limits) whenever the user performs the requisite actions. However, there are also more complex types of interaction. For example, if we try to implement an interactive histogram in which the user can change the binwidth and anchor, we need a way to recompute the number of cases in each bin after either of the two parameters is updated. Likewise, to implement linked highlighting/brushing, whereby the user can highlight some cases in the data across multiple plots by either clicking or click-and-drag-selecting the corresponding geometric objects, we need to keep track of which cases belong to which object.
+
+All this to say, there is a lack of a general theory of interactive data visualizations. There have been open calls for an interactive data visualization pipeline or "plumbing" [@wickham2009] and some attempts to address these calls have been made [@xie2014]. However, there is still a 
+
+## Brief history of static data visualization
+
+Data visualization has a long and intricate history [see e.g. @dix1998;@chen2008;@friendly2021;@young2011]. Briefly, early examples of data visualization existed well before the 20th century, such as in the works of William Playfair [see e.g. @costigan1990]. However, for a long time, it was considered at best an auxiliary field to mathematical statistics. This began to change at the end of 1950's, when a series of developments took place that lead to a great increase in the prominence of data visualization. Firstly, at the theoretical level, the work of Tukey [-@tukey1962;-@tukey1977] and Bertin [-@bertin1967] established data visualization as an independent discipline in its own right. Secondly, at the applied level, the development of personal computers [see e.g. @abbate1999] and high-level programming languages, most notably FORTRAN in 1954 [@backus1978], distributed the ability to produce publication-quality graphics to the wider public. Combined, these developments lead to a surge in the popularity of data visualization and dissemination of figures. 
+
+Final development in the field of static data visualization that is important to mention was the development of the Grammar of Graphics, introduced by Leland Wilkinson [-@wilkinson2012]. Prior to Wilkinson's work, data visualization systems tended to come in two forms: low-level systems, in which the users had to create visualizations from scratch by working with graphical primitives, and high-level systems, in which the users could select from a limited range of ready-made classes of plots (such as scatterplot, barplot, etc..). Wilkinson, building upon the work of Bertin and Tukey, developed theory for a mid-level visualization system - Grammar of Graphics - which allows the users to specify a broad range of statistical graphics declaratively, by combining composable pieces which specify a graphic, including aesthetics, scales, coordinates, and geometric objects [@wilkinson2012]. Grammar of Graphics has been successfully implemented in several software packages, most notably the popular *ggplot2* R package [@wickham2010], and the proprietary software *Tableau* [@tableau2023].
+
+## Early interactive data visualization
+
+After static data visualization entered the computer age, it would not take long for interactive data visualization systems to appear. Early systems appeared in the 1960's and 1970's, and tended to be specialized for one specific task. For example, [@fowlkes1969] used interactive visualization to show how probability densities reacted to change of parameters and transformations, and [@kruskal1964] used interactive visualization to showcase his multi-dimensional scaling algorithm (a way of embedding objects within a common space based on pairwise distance measurements). The first "general-purpose" system was *PRIM-9* [@fisherkeller1974], which allowed for exploration of high-dimensional data in scatterplots using projection, rotation, subsetting and masking. Later systems grew on to become even more general and ambitious. For example, *MacSpin* [@donoho1988], *Lisp-Stat* and *XLisp-Stat* [@tierney1989; @tierney2004], and *XGobi* [@swayne1998] provided rich features such as interactive scaling, rotation, linked selection (or "brushing"), and interactive plotting of smooth fits in scatterplots, as well as interactive parallel coordinate plots and grand tours.
+
+Following the turn of the 21st century, interactive data visualization systems further grew in scope and flexibility and began to be integrated into general-purpose statistical computing software. The successor system to XGobi, *GGobi* [@swayne2003] was made to be directly embeddable in R. Java-based *Mondrian* [@theus2002] allowed for sophisticated linked interaction between many different types of plots including scatteplots, histograms, barplots, scatterplot, mosaic plots, parallel coordinates plots, and maps. Similarly, *iPlots* [@urbanek2003] implemented a general framework for interactive plotting that was not only embedded in R but could be directly programmatically manipulated, and was later further expanded and made performant for large data volumes in *iPlots eXtreme* [@urbanek2011]. Finally, *cranvas* [@xie2014] also implemented a similar suite of interactive features.
+
+## Web-native interactivity
+
+While the developments outlined in the previous section took place, the rise of and proliferation of Web technologies in the mid 1990's provided another popular avenue for interactive graphics. Specifically, the appearance of JavaScript in 1995 as a high-level general-purpose programming language for the Web [for a description of the history, see e.g. @wirfs-brock2020] created an extremely versatile platform for highly-reactive and portable applications. JavaScript was created with the explicit purpose of making the Web interactive, and the fast dissemination of standardized web-browsers meant that online interactive applications could be accessed by anyone, from anywhere. Interactive data visualization became just one of many technologies highly sought after within the fledgling Web ecosystem. 
+
+The very early systems such as *Prefuse* in 2005 [@heer2005] and *Flare* in 2008 [@flare2020] relied on plugins (Java and Adobe Flash Player, respectively). However, in the early 2010's, several true Web-native interactive data visualization systems emerged. The most prominent among these is *D3*.js [@bostock2011]. D3 is a broad and general framework for manipulating data and HTML documents and creating visualizations. It is in wide use still to this day and has spawned a number of specialized, higher-level data visualization libraries that abstract away some of the details and provide an interface to commonly used statistical plots, such as the also very prominent *plotly*.js [@plotly2022]. Importantly, in the D3 model, D3's engine only renders graphics: interactivity is left the user. If a user wants to create a visualization that's interactive, they have to write JavaScript functions that take care of updating the underlying parameters. A radically different approach altogether was taken by *Vega* [@satyanarayan2015]. In Vega, all aspects of a visualization including interactivity are specified declaratively, as a Plain Old JavaScript Object (POJO). As such, Vega carries a large number of reactive primitives. Similar to D3 and plotly, Vega also spawned its own higher-level libraries such as *Vega-lite* [@satyanarayan2016], and *Altair* [@vanderplas2018]. One final popular interactive data visualization framework in JavaScript is *Highcharts* [@highcharts2023]. Similar to Vega-lite, Highcharts is a high-level declarative framework in which plots are created based on a POJO specification object. Finally, besides the general interactive data visualization frameworks, there are also many more specialized libraries focusing on e.g. rendering interactive scatterplots at large data volumes [see e.g. @lekschas2023].   
+
+
+# What do we interact with?
 
 There is a subtle yet profound question in the production and use of interactive data visualizations: *when we interact with a plot, what exactly are we interacting with?* On its face, the question might seem trivial. A person clicking a bar in an interactive barplot may be convinced that they are interacting with the coloured rectangle on the screen, since, by design, that is the salient "thing" they see change in front of them. And in some way, this is true - by interacting with the bar, we can affect its graphical attributes: we can change its colour, we can squeeze it/stretch it, and so on. Yet, in another, deeper way, this perception of interacting with a plain geometric object is just an illusion. How so? 
 
 The illusion lies in the fact that the bar is not just the geometric object - the coloured rectangle - it is represented by. Instead, it is only ever meaningful as a bar within the context of the plot. We can see this quite easily. If we were to take the coloured rectangle and transpose it onto a blank area of the screen, we would lose some crucial information that the rest of the plot provides - it would no longer be a "bar" in the same sense that it was before.  
 
-Thus, the fact of being in a plot imbues objects with some additional information or structure, beyond their simple geometry. That statement should not seem too surprising or controversial to people familiar with data visualization. However, it may be more challenging to define in detail what exactly this "structure" is. There are a few ideas we may be able to muster. First of all, we know that the geometric objects in plots are supposed to represent some underlying data. That much is clear - if the objects in a graphic do not represent any external data but are instead drawn according to some arbitrary rules, we cannot really, in good conscience, call the resulting graphic a "plot". But data is only a part of the story. 
+Thus, objects in a plot are imbued with some additional information or structure, beyond their simple geometry. That statement should not seem surprising or controversial to people familiar with data visualization. However, it may be more challenging to define in detail what exactly this "structure" is. There are a few ideas we may be able to muster. First of all, we know that the geometric objects in plots are supposed to represent some underlying data. That much is clear - if the objects in a graphic do not represent any external data but are instead drawn according to some arbitrary rules, we cannot really, in good conscience, call the resulting graphic a "plot". But data is only a part of the story. 
 
 When drawing plots, we rarely represent the raw data directly. Instead, we often summarize, aggregate, or transform. We do this by applying mathematical functions such as count, sum, mean, log, or the quantile function. And it is the output of these transformations that we then represent by the geometric objects. 
 
 So, when interacting with a bar in an interactive barplot, we do not just interact with a plain geometric object. Instead, we interact with a mathematical function, or, in fact, several of them. This is very important. Mathematical functions have properties, and these properties impose limits on what kinds of visualizations and interactions we can meaningfully compose. This is the crux of the argument presented in this text. Before diving deeper, however, let's first define some key terms and draw a rough sketch of the data visualization process as a whole. 
 
-## Rough sketch of the data visulization process
+## Rough sketch of the data visualization process
 
-To create a data visualization, be it static or interactive, we need several ingredients: data, summaries, scales/coordinate systems, and geometric objects. These should be familiar to most users of interactive data visualization systems. However, it may still be useful to lay them out in order, and examine the specific features and quirks each one of them has.    
+To create a data visualization, be it static or interactive, we need several ingredients: data, summaries, scales/coordinate systems, and geometric objects. These should be familiar to most users of interactive data visualization systems. However, it may still be useful to lay them out in order, and examine the specific features and quirks of each one of them.     
 
-First of all, as was mentioned in the previous section, every data visualization needs to be built on top of some underlying data. We can represent this as a set of some arbitrary units of information (data) $D$. Data in the wild usually comes with more structure than that - for example, we often encounter data stored in a tabular ( or "tidy" [CITE]) format, stratified by rows and columns. In that case, we could substitute $D$ by the set of rows $R$, the set of columns $C$, or the set of cell values $R \times C$ (where $\times$ indicates the cartesian product). However, for the purpose of this broad description, we do not have to assume any special structure and just speak of the data units $d \in D$.  
+First of all, as was mentioned in the previous section, every data visualization needs to be built on top of some underlying data. We can represent this as a set of some arbitrary units of information (data) $D$. Data in the wild usually comes with more structure than that - for example, we often encounter data stored in a tabular ( or "tidy" [@wickham2014]) format, stratified by rows and columns. In that case, we could substitute $D$ by the set of rows $R$, the set of columns $C$, or the set of cell values $R \times C$ (where $\times$ indicates the cartesian product). However, for the purpose of this broad description, we do not have to assume any special structure and just speak of the data units $d \in D$.  
 
 Secondly, at some point during the visualization process, we need to transform the set of data units $D$ into a set of collections of summaries $S$ via a function $\alpha$. The summarizing function $\alpha$ can have many different flavours. It may be the case that $\alpha$ is one-to-one (bijection), in which case there is one summary for every unit of data (and vice versa). This is the case, for example, with the prototypical scatterplot, in which $\alpha$ is just the identity function (every unit of data/row gets assigned one "point"). However, more often, $\alpha$ is many-to-one (surjection), which means that each summary may be composed of multiple units of data. Examples of this include the typical barplot, histogram, density plot, or violin plot. When $\alpha$ is many-to-one, it will typically reduce the cardinality of the data, such that $\lvert S \lvert \leq \lvert D \lvert$ (e.g. in a typical barplot, there will be fewer bars than there are rows of the data, unless each row represents a unique level of the categorical variable). To turn $n$ units of data into $k$ collections of summaries, we need to somehow stratify the data on one or more variables. These variables may either come from the data directly (i.e. the variables used are "factors", as in the case of a barplot or a treemap) or may themselves be a summary of the data (as in the case of histogram bins). Importantly also, each collection of summaries $s \in S$ may (and usually will) hold multiple values, produced by a different constituent function each - for example, the collection $s$ for a single boxplot "box" will consist of the median, the first and third quartile, the minimum and maximum, and the outlier values of some variable, all for a given level of some stratifying variable (which itself will also be an element of $s$). Finally, the output of these constituent functions may also depend on some external parameters, which may be either directly supplied by the user or heuristically inferred from the data by the visualization system itself. Examples of such external parameters include anchor and binwidth in a histogram.
 
-Thirdly, each collection of summaries $s \in S$ needs to be translated from the data- (or summary-) coordinates to graphical coordinates/attributes $g \in G$, via a function $\beta$. This means that each summary value gets mapped or "scaled" to a graphical attribute via a constituent scaling function. Note that this mapping preserves cardinality - there are as many collections of graphical attributes as there are collections of summaries, $\lvert G \lvert = \lvert S \lvert$. For numeric/continuous summaries, the most common type of scales come in the form of linear transformations, such that the minimum and maximum of the data are mapped near the minimum and maximum of the plotting region, respectively. Continuous scales may also provide non-linear transformations such as the log-transformation or binning, and the values may even get mapped to discrete graphical attributes (e.g. binned values may get translated to one of 5 different shades of a single colour). Likewise, discrete summaries may get translated to either continuous (e.g. position) or discrete (e.g. colour) graphical attributes. There are also coordinate systems, which may further translate values from multiple scales simultaneously, e.g. by taking values in cartesian (rectangular plane) coordinates and translating them to polar (radial) coordinates. Either way, $\beta$ can be viewed as one function, representing the composition of any number of scales and coordinate systems applied to various summaries.  
+Thirdly, each collection of summaries $s \in S$ needs to be translated from the data- (or summary-) coordinates to graphical coordinates/attributes $g \in G$, via a function $\beta$. This means that each summary value gets mapped or "scaled" to a graphical attribute via a constituent scaling function. Note that this mapping preserves cardinality - there are as many collections of graphical attributes as there are collections of summaries, $\lvert G \lvert = \lvert S \lvert$. For numeric/continuous summaries, scales often come in the form of linear transformations, such that the minimum and maximum of the data are mapped near the minimum and maximum of the plotting region, respectively. Continuous scales may also provide non-linear transformations such as the log-transformation or binning, and the values may even get mapped to discrete graphical attributes (e.g. binned values may get translated to one of 5 different shades of a colour). Likewise, discrete summaries can be translated to either continuous (e.g. position) or discrete (e.g. colour) graphical attributes. There are also coordinate systems, which may further translate values from multiple scales simultaneously, e.g. by taking values in cartesian (rectangular plane) coordinates and translating them to polar (radial) coordinates. Either way, $\beta$ can be viewed as one function, representing the composition of any number of scales and coordinate systems applied to various summaries.  
 
 Finally, the collections of graphical attributes/coordinates $g \in G$ are drawn as geometric objects inside the plotting region, which we can represent as the set of pixels $P$. While the act of drawing does take the collections of graphical coordinates $g \in G$ as inputs, it does not simply return an output for each input (like a mathematical function would), but instead mutates the state of the graphical device via a side effect $\gamma^*$, i.e. changing the colour values of pixels in $P$. In other words, how the graphic ends up looking may depend, for example, on the order in which we draw the objects. For example, when drawing points of different colour, some points may end up being plotted over others, and thus the final result may depend on whether we draw red points first and yellow second or vice versa. As such, $\gamma^*$ is not a simple mapping from $G$ to $P$ and we cannot call it a true mathematical function (since that would require it to merely assign an output to each input). The geometric objects may be simple, such as points, lines, or bars, or compound, such as a boxplot or pointrange. Importantly, each attribute necessary to draw the geometric object, such as x- and y-position, width, height, area, etc... needs to be present in the corresponding $g$.     
 
 The whole process can be summarized as follows:
 
-$$D \overset{\alpha}{\to} S \overset{\beta}{\to} G \overset{\gamma^*}{\Rightarrow} P$$
+\begin{equation}
+D \overset{\alpha}{\to} S \overset{\beta}{\to} G \overset{\gamma^*}{\Rightarrow} P ((\#eq:recipe1)
+\end{equation}
 
 Or, equivalently: 
 
-$$\text{(data)} \overset{\text{summarize}}{\longrightarrow} \text{(summaries)} \overset{\text{translate/encode}}{\longrightarrow} \text{(graph. coordinates)} \overset{\text{draw}^*}{\Rightarrow} \text{(graph. device state)}$$
+\begin{equation}
+\text{(data)} \overset{\text{summarize}}{\longrightarrow} \text{(summaries)} \overset{\text{translate/encode}}{\longrightarrow} \text{(graph. coordinates)} \overset{\text{draw}^*}{\Rightarrow} \text{(graph. device state)} (\#eq:recipe2)
+\end{equation}
 
 The above should be fairly non-controversial description of how a data visualization is produced, and applies equally well to static as well as interactive visualizations. 
 
 ## Summaries as first-class citizens
 
-In some treatments of data visualization, the summarizing step ($\alpha: D \to S$) is de-emphasized, in one of two ways. In the first case, the data is assumed to arrive pre-summarized, i.e. $S = D$. An example of this would be drawing a barplot from a pre-summarized table of counts. Under this framing, data visualization is just about encoding the data into geometric objects. This may feel very natural when considering plots which show a one-to-one mapping (bijection) between the data and the geometric objects such as the scatterplot or the lineplot/time-series chart. And indeed, in these plots, the summarizing function $\alpha$ is identity, and as such *can* be ignored. 
+In some treatments of data visualization, the summarizing step ($\alpha: D \to S$) is de-emphasized, in one of two ways. In the first case, the data is assumed to arrive pre-summarized, i.e. $S = D$. An example of this would be drawing a barplot from a pre-summarized table of counts. Under this framing, data visualization is just about encoding the data into geometric objects. This may feel very natural when considering plots which show a one-to-one mapping (bijection) between the data and the geometric objects, such as the scatterplot or the lineplot/time-series chart. And indeed, in these plots, the summarizing function $\alpha$ is identity, and as such *can* be ignored. In the second case, the computation of summaries is considered, however, it is absorbed into the translation step, such that $\alpha = \beta$. As an example of this, we may think of a histogram as directly translating its underlying variable into bin coordinates. Thus, under this framing, data visualization is also about encoding the data into graphics, although in this case there is "more going on" in the encoding step. 
 
-In the second case, the computation of summaries is considered, however, it is absorbed into the translation step, such that $\alpha = \beta$. As an example of this, we may think of a histogram as directly translating its underlying variable into bin coordinates. Thus, under this framing, data visualization is also about encoding the data into graphics, although in this case there is "more going on" in the encoding step. 
+Neither of these two approaches is *wrong*. The data visualization process, by its very nature, consists of *composition* (that is the essence of (\ref{eq:recipe1}) and (\ref{eq:recipe2})). That is, given two functions $\alpha$ and $\beta$ , we can define a new composite function $\rho = \beta \circ \alpha$ (read "beta after alpha"), that takes in the input of $\alpha$ and spits out the output of $\beta$, i.e. $\rho(d) = \beta(\alpha(d))$. And indeed, this is what we want and expect from our data visualization systems - it would quickly get tiring if instead of "visualization" we had to talk about "summarizing-then-translating-then-rendering".  
 
-Neither of these two approaches is *wrong*, since, by the very nature of the data visualization process, the functions that were described in the previous sections do *compose*. That is, for example, instead of treating $\alpha$ and $\beta$ as two separate steps in the data visualization "recipe", we can define a new step $\rho = \beta \circ \alpha$ (read "beta after alpha") that absorbs the two functions into itself, taking in the input of $\alpha$ and spitting out the output of $\beta$, i.e. $\rho(d) = \beta(\alpha(d))$. Indeed, this is what we want and expect from our visualization systems - we talk about "visualization" not "summarizing-then-translating-then-drawing".  
+However, composing things and abstracting them out into larger blocks or chunks can also bring some disadvantages. Specifically, in the case of the two approaches outlined above, there is a tight coupling between summaries and graphical coordinates. For example, under the first framing, which assumes that data arrives pre-summarized, it may be awkward or unnecessarily laborious to make all but the most simple types of plots - most users of data visualization systems would probably not enjoy having to go through several data-wrangling steps each time they wanted to draw a boxplot. Conversely, under the second framing, which assumes that summaries are just part of translating the raw data into graphics, we need a special "class" of a plot for every different summary, e.g. a barplot of counts, a barplot of sums, a barplot of means, etc...
 
-However, there is also a disadvantage in composing and abstracting things out into larger blocks. Specifically, the two approaches outlined above produce a tight coupling between summaries and graphical coordinates. The first approach, which assumes that data arrives pre-summarized, makes it awkward to create all but the most simple types of plots - most users of data visualization would probably not enjoy having to go through several data-wrangling steps every time they wanted to display a simple a boxplot. Conversely, the second approach, which absorbs the summarizing step into the translation step, makes it hard to create new types of plots by simply replacing the summary statistics, since these are now tied to the graphics. As such, both approaches are difficult to generalize.      
-
-We can give a much richer and general account of visualizations by treating both the summarizing and the translating step as first class citizens. Importantly, some plots may encode the same summaries through different graphical attributes and geometric objects; other plots may compute different summaries but display them via the same means. As an example of the former, see the examples of histogram and spineplot in Figure \@ref(fig:histospine). Histograms and spineplots use the same summaries, i.e. binned counts of some underlying continuous variable $x$. However, histograms encodes the bin breaks into rectangle boundaries along the x-axis, and the counts as the top rectangle boundary along the y-axis, whereas spineplot encodes the counts into both x- and y-axis rectangle boundaries, with both the x- and the y- dimensions stacked and the y-dimension additionally scaled to 1, and the bin breaks are encoded as x-axis labels. As an example of the latter, scatterplot and bubbleplot both use points/circles to display their underlying summaries, however, whereas the summary for scatterplot is identity (or at least bijective), the summary for bubbleplot involves binning along x- and y- axis.  
+We can give a much richer and general account of visualizations by treating both the summarizing and the translating steps as first class citizens. Under this framework, some plots may show the same summaries but encode them through different graphical attributes and geometric objects, and, conversely, other plots may compute different summaries but display them via the same means. As an example of the former, see the examples of histogram and spineplot in Figure \@ref(fig:histospine). Histograms and spineplots both use the same summaries, specifically binned counts of some underlying continuous variable $x$. However, the histogram encodes the bin breaks into rectangle boundaries along the x-axis, and the counts as the top rectangle boundary along the y-axis, whereas the spineplot encodes the counts into both x- and y-axis rectangle boundaries, with both the x- and the y- dimensions stacked and the y-dimension additionally scaled to 1, and the bin breaks are encoded as x-axis labels. As an example of the latter, scatterplot and bubbleplot both use points/circles to display their underlying summaries, however, whereas the summary for scatterplot is identity (or at least some bijective function), the summary for bubbleplot involves binning along x- and y- axis.  
 
 ```{r histospine, fig.height=3, echo=FALSE, fig.cap="Histogram and spineplot use the same summaries but encode them in different ways. a) In histogram, the x-axis display bin breaks and y-axis displays count, stacked across groups (failure/no failure). b) In spineplot, the x-axis and y-axis both display count; the x-axis shows count stacked across bins, whereas the y-axis shows count stacked across groups and scaled by the total bin count (such that the total bin height = 1). The bin breaks are displayed as x-axis labels (however, the underlying summary is still stacked count)."}
 
@@ -164,7 +192,7 @@ Thus, if we want our interactive visualizations to be performant, we need to mod
 
 # The Problem of Statistical Summaries
 
-There is an even deeper issue when it comes to interactivity and statistical summaries of the data. Specifically, not every statistical summary "works" equally well - instead, some summaries may be better than others. Let's first illustrate the problem with a case study.
+There is an even deeper issue when it comes to interactivity and statistical summaries of the data. Specifically, not every statistical summary "works" equally well - instead, some summaries produce better or more coherent interactive graphics than others. Let's first illustrate the problem with a case study.
 
 ## Case study: Counts and Means
 
@@ -574,17 +602,16 @@ Armed now with some rudimentary theory, we can attempt to describe the data visu
 
 We again start with the data $D$ which is just some set of values that may or may not be structured. Ultimately, our goal is to try and learn something new from the data. To this end, we want to create a visualization that will show the information from the data through graphical elements, primarily geometric objects such as points, lines, or areas (we may also use, for example, text/symbols). 
 
-First of all, we need to think about how the information from the data will be distributed among the objects. To start with the simplest case, sometimes we might want all information in the data to go into a single geometric object. This may be a perfectly good way to display information about the entire data set. Examples of plots with a single geometric object may include time series plot (line), density plot (density polygon), or radar chart (pentagon/other polygon).
+First of all, we need to think about how the information from the data will be distributed among the objects. Sometimes, we may want all information in the data displayed as a single geometric object. This is a perfectly good way of displaying information about the entire dataset. Examples of plots with a single geometric object include a single-time-series plot (line), a density plot (density polygon), a or radar chart (pentagon/other polygon).  
 
-However, often, we want to compare and contrast different parts of the data. And this is where we have to start to think more deeply about how information should be allocated. For example, it would not be very useful to draw multiple identical geometric objects representing the same information from the data - if all of the objects looked the same, we could learn the same information from any one of them and so it is redundant to have more than one. Instead, we want each object to represent different aspects of the data and so we need to think about slicing the data up along some axis or axes.  
+However, often, we may want to compare different parts of the data via different objects. And this is where we have to start to think more deeply about how the information should be allocated. For example, it would not be very useful to draw multiple identical geometric objects representing the same information from the data - if all of the objects looked the same, we could learn the same information from any one of them and so it is redundant to have more than one. Instead, we want each object to represent different aspects of the data and so we need to think about slicing the data up along some axis or axes.  
 
 Often, there are some axes along which we can slice already present in the structure of the data. For example, a lot of data comes organized in a tabular $R \times C$ format where $R$ is the set of rows and $C$ is the set of columns (and $R \times C$ are the cells), and so we could use any of these three sets as the basis for drawing our geometric objects. This is shown in Figure \@ref(fig:partitioning). Notice that, when slicing along rows $R$, the number of objects (points) is equal to their cardinality: $\textbf{\# objects} = \lvert R \lvert$. Likewise, when slicing along columns, $\textbf{\# objects} = \lvert C \lvert$, and when slicing along cells, $\textbf{\# objects} = \lvert R \times C \lvert$.
 
 ```{r partitioning}
-
 #| echo: FALSE
 #| fig.height: 4
-#| fig.cap: "Three ways of partitioning a tabular data set. a) The underlying data, represented as a matrix with 3 rows and 2 columns. b) To draw a scatterplot, we can slice along the rows and draw points at the x- and y-position given by the columns. c) To draw a lineplot, we can slice along the columns & draw lines by connecting points given by the corresponding row values. d) To draw a dotplot, we can slice along both rows and columns and draw points at given row and column index, with point size given by the corresponding cell value."}
+#| fig.cap: "Three ways of partitioning a tabular data set. a) The underlying data, represented as a matrix with 3 rows and 2 columns. b) To draw a scatterplot, we can slice along the rows and draw points at the x- and y-position given by the columns. c) To draw a lineplot, we can slice along the columns & draw lines by connecting points given by the corresponding row values. d) To draw a dotplot, we can slice along both rows and columns and draw points at given row and column index, with point size given by the corresponding cell value."
 
 library(gridExtra)
 
@@ -643,9 +670,9 @@ box(bty = "L", col = "grey60")
 
 ```
 
-However, there is no reason to limit ourselves to slicing along axes that are already present in the structure of the data - we can also create new axes. For example, when computing the statistics underlying the classical barplot, we can slice along the levels of some discrete variable $x$. Likewise, when drawing a histogram or a heatmap, we can bin some continuous variable(s) and slice along the bins. If we are making an interactive visualization, we can make the slicing axis responsive to user input, for example, we might let the user change the histogram bin width and anchor interactively. 
+However, there is no reason to limit ourselves to slicing along axes that are already present in the structure of the data - we can also create new axes. For example, when computing the statistics underlying the classical barplot, we can slice along the levels of some discrete variable $x$. Likewise, when drawing a histogram or a heatmap, we can bin some continuous variable(s) and slice along the bins. If we are making an interactive visualization, we can make the slicing axes responsive to user input, for example, we might let the user change the histogram bin width and anchor interactively. 
 
-Now, when slicing along any given axis or axes, a question remains *how* to slice. There are two key points to mention. Firstly, no matter how we perform the slicing, every unit of data $d \in D$ should probably end up in *some* slice, i.e. our slicing operation should not discard or "throw away" any data. This seems obvious - we want the visualization to be an accurate and complete representation of the data, and as such we cannot simply leave anything out arbitrarily. Secondly, we also probably want each unit of the data to end up in *one slice only*. This point is a bit more subtle. Suppose, for example, that we were tasked with plotting data for a company, and we were given as data a set of $\textbf{employees}$ and a set of $\textbf{managers}$, with every manager in $\textbf{managers}$ also being included in the set of $\textbf{employees}$ (since each manager is also an employee of a company). Then, we could use the two sets as the two "slices" of the data and display the size/count of each set via the height of a bar in a barplot (such that the $\textbf{employees}$ bar would be at least as tall as the $\textbf{managers}$ bar but most likely taller, unless all employees were managers). However, while it is certainly possible to create this type of plot, it unnecessarily duplicates information, and any questions we might want to answer with it might be better served by other plots. For example, if we wanted to compare the number of $\textbf{managers}$ vs. $\textbf{non-manager employees}$, we would be off drawing each as a separate bar. If we wanted to see what proportion of the total workforce are $\textbf{managers}$, we could draw one stacked bar with $\textbf{non-manager employees}$ stacked on top of $\textbf{managers}$.          
+Now, when slicing along any given axis or axes, a question remains *how* to slice. There are two key points to mention. Firstly, no matter how we perform the slicing, every unit of data $d \in D$ should probably end up in *some* slice, i.e. our slicing operation should not discard or "throw away" any data. This seems obvious - we want the visualization to be an accurate and complete representation of the data, and as such we cannot simply leave anything out arbitrarily. A question might remain what do to in the case of missing or incomplete data, but in the case of complete data there does not seem to be any argument for discarding information. Secondly, we also probably want each unit of the data to end up in *one slice only*. This point is a bit more subtle. For example, suppose that we were tasked with plotting data for a company, and we were given as data a set of $\textbf{employees}$ and a set of $\textbf{managers}$, with every manager in $\textbf{managers}$ also being included in the set of $\textbf{employees}$ (since each manager is also an employee of a company). We could use the two sets as the two "slices" of the data and display the size/count of each set via the height of a bar in a barplot (such that the $\textbf{employees}$ bar would be at least as tall as the $\textbf{managers}$ bar but most likely taller, unless all employees were managers). However, while it is certainly possible to create this type of plot, it unnecessarily duplicates information, and any questions we might want to answer with it might be better served by other plots. For example, if we wanted to compare the number of $\textbf{managers}$ vs. $\textbf{non-manager employees}$, we would be off drawing each as a separate bar. If we wanted to see what proportion of the total workforce are $\textbf{managers}$, we could draw one stacked bar with $\textbf{non-manager employees}$ stacked on top of $\textbf{managers}$.          
 
 So, when slicing data, we want to make sure every unit of data ends up in one slice and no two units end up in the same slice. One might notice that this description of slicing corresponds precisely to the mathematical definition of a partition (Section \@ref(partitions)). That is, the data is split into parts such that each unit of data is assigned to one part and one part only. This way of thinking about slicing the data is useful since we can make use of the dual nature of the definition of partition: we can either think of the partition as a function that assigns each data unit a part label $p \in P$, or as the set of part labels $p \in P$ where each has a corresponding subset of the data $D_p$, such that the union of the subsets recovers the original data set, $\bigcup_{p \in P} D_p = D$, and intersection of any two subsets is empty: $D_p \cap D_q = \varnothing , \; \text{for} p \neq q$. 
 
@@ -663,10 +690,28 @@ Now that we have split the data into parts, within hierarchical/nested partition
 
 It is preferable to avoid having to iterate through all $n$ units of data more than once. As such, the function that computes the summary for each part should be a *reduce* function, i.e. initialize $k$ values and then loop through the data and repeatedly update each of them whenever we come across a data unit that belongs to a corresponding part, as if computing a running total but keeping track of only the latest value. For example, suppose we are computing the summaries for a barplot with three bars $A$, $B$, and $C$. We may initialize the values as 0's, i.e. $\{ A: 0; B: 0; C: 0 \}$, and the walk the data one data unit at a time, each time incrementing the corresponding value. For example, encountering the data $\{ A, A, B, A, B, C, \ldots \}$ would lead to the following series of updates: $\{ A: 1; B: 0; C: 0 \}$, $\{ A: 2; B: 0; C: 0 \}$, $\{ A: 2; B: 1; C: 0 \}$, $\{ A: 3; B: 1; C: 0 \}$, $\{ A: 3; B: 2; C: 0 \}$, $\{ A: 3; B: 2; C: 1 \}$,... We may compute initialize and update multiple statistics for each part, for example, we may at the same time want to compute the count, sum, product, etc... 
 
+The reduce operation can be summarized with the following R pseudocode:
+
+```{r, eval = FALSE}
+
+factor_indices <- ... # E.g. c(1, 1, 2, 1, 3 ...)
+parts <- list()
+
+reduce <- ...
+reduce_initial <- ... # E.g. function() list(count = 0, sum = 0)
+
+for (j in 1:k) parts[[j]] <- reduce_initial()
+
+for (i in 1:n) {
+  parts[[factor_indices[i]]] <- reduce(parts[[factor_indices[i]]], data[i, ])
+}
+
+```
+
 ```{r}
 #| echo: false
 #| fig-height: 3
-#| fig-cap: "Schematic of the reduce operation: we iterate through $n$ datapoints, updating the corresponding collection of summaries (one of $k$) at each step."
+#| fig-cap: "Diagram of the reduce operation: we iterate through $n$ datapoints, updating the appropriate collection of summaries (one of $k$, ) at each step."
 
 x0 <- seq(0.1, 0.8, by = 0.1)
 x1 <- seq(0.2, 0.9, by = 0.1)
@@ -675,7 +720,7 @@ xparts <- seq(0.2, 0.8, by = 0.2)
 part <- c(1, 2, 2, 2, 1, 3, 3, 4)
 
 grid.newpage()
-grid.text("k collections", 0.5, 0.9)
+grid.text("k reduced collections", 0.5, 0.9)
 grid.rect(0.5, 0.25, 1, 0.2, gp = gpar(fill = "grey90", col = NA))
 grid.segments(0, 0.35, 1, 0.35, arrow = arrow1)
 grid.segments(0, 0.15, 1, 0.15, arrow = arrow1)
@@ -692,12 +737,12 @@ One may notice that the statistics computed in this reduce step have to meet the
 
 ### Map and Stack
 
-Beyond iterating across the $n$ data units, we may also want to iterate across the $k$ collections of summaries, once we have them. There are two reasons. First, we may want to *map* (translate) each collection somehow. For example, we may want to normalize the summaries (possibly by parent-part values), translate them to graphical attributes/coordinates, etc... This operation takes each collection of summaries and returns new, mapped collection.
+Once we have computed the $k$ collections of summaries, we may also want to iterate over them. There are two reasons. First, we may want to *map* (translate) each collection somehow. For example, we may want to normalize the summaries (possibly by parent-part values), translate them to graphical attributes/coordinates, etc... This operation takes each collection of summaries and returns new, mapped collection.
 
 ```{r}
 #| echo: false
 #| fig-height: 3
-#| fig-cap: "Schematic of the map operation: we iterate through the $k$ collections of summaries, translating each collection at each step."
+#| fig-cap: "Diagram of the map operation: we iterate through the $k$ collections of summaries, translating each collection at each step."
 
 x0 <- seq(0.1, 0.8, by = 0.1)
 x1 <- seq(0.2, 0.9, by = 0.1)
@@ -716,12 +761,12 @@ grid.text("Iterating k collections", 0.5, 0.05)
 
 ```
 
-We may also want to *stack* some summaries/attributes on top of each other, as in the case of stacked barplot bars. This is somewhat more challenging, since we need to stack the appropriate summaries together. For example, if we have 6 collections of summaries, representing the product of $\textbf{gender} = (male, female)$ and $\textbf{group} = (A, B, C)$ factors - $\{ (male; A), (male; B), (male; C), (female; A), (female; b), (female; C) \}$ - we need to stack collections which belong to $male$ together and collections which belong to $female$ together, respectively, and in the order of the groups: $A, B, C$. To do this, the collections should: a) be ordered appropriately, and b) each have a reference to the parent collection. We can achieve this as follows. First, assuming that the two factors which constitute the product factor have $k_1$ and $k_2$ levels, indexed by integers $i_1$ and $i_2$, respectively, we can define the product factor index as: $i_3 = k_2 \times i_1 + i_2$. This will guarantee that the levels have first-factor-major order (i.e. $\{ (male; A), (male; B), \ldots \}$, as outlined above). Second, each collection of summaries should include a reference to the parent collection, such that, for example the $(male; A)$ collection has reference to $male$, $(female; C)$ has reference to $female$, etc... Then, if we let $c$ be the child partition and $p$ be the parent partition, we can perform stacking as follows: let $c_{copy}$ be copy of the values of $c$, set $c = p$, update $p$ by $c_{copy}$ values.       
+We may also want to *stack* some summaries/attributes on top of each other, as in the case of stacked barplot bars. This is somewhat more challenging, since we need to stack the appropriate summaries together and in appropriate order. For example, if we have 6 collections of summaries, representing the product of $\textbf{gender} = (male, female)$ and $\textbf{group} = (A, B, C)$ factors - $\{ (male; A), (male; B), (male; C), (female; A), (female; b), (female; C) \}$ - we need to stack collections which belong to $male$ together and collections which belong to $female$ together, respectively, and in the order of the groups: $A, B, C$. To do this, the collections should: a) be ordered appropriately, and b) each have an index or reference to the parent collection. We can achieve this as follows. First, assuming that the two factors which constitute the product factor have $k_1$ and $k_2$ levels, indexed by integers $i_1$ and $i_2$, respectively, we can define the product factor index as: $i_3 = k_2 \times i_1 + i_2$. This will guarantee that the levels have first-factor-major order (i.e. $\{ (male; A), (male; B), \ldots \}$, as outlined above). Second, the index of reference to the parent collection should be kept e.g. as part of the factor data. With these in place, we can stack as follows:       
 
 ```{r}
 #| echo: false
 #| fig-height: 3
-#| fig-cap: "Schematic of the stack operation: we iterate through the $k$ collections of summaries, each time first setting the collection values to the parent values and then updating the parent values by the collection values."
+#| fig-cap: "Diagram of stacking: we iterate through the $k$ collections of summaries, each time first updating the collection of stacked values (belonging to the appropriate parent part) by the part values and then copying the stacked values into the part."
 
 x0 <- seq(0.1, 0.8, by = 0.1)
 x1 <- seq(0.2, 0.9, by = 0.1)
@@ -742,7 +787,35 @@ grid.text("Iterating k collections", 0.5, 0.05)
 
 ```
 
-The map and stack operations can both be performed within a single step of a loop through the $k$ collections. Further, since the cardinality of the parts will typically be smaller or at most as big as the cardinality of the data (if there is no reduce step), $k \leq n$, the whole operation should usually be quite cheap.    
+The map and stack operations can both be performed within a single step of a loop through the $k$ collections. Further, since the cardinality of the parts will typically be smaller or at most as big as the cardinality of the data (if there is no reduce step), $k \leq n$, the whole operation should usually be quite cheap.  
+
+The map and stack operation can be summarized with the following pseudocode:
+
+```{r, eval=FALSE}
+
+parts <- ... # E.g. as was computed above
+parent_parts <- ...
+parent_indices <- ...
+stacked <- list()
+
+map <- ...   # function(part) { ... }
+stack <- ... # function(parent, part) { ... }
+stack_initial <- ... 
+
+for (jj in 1:k_parent) stacked[[jj]] <- stack_initial()
+
+for (j in 1:k) {
+  # We may need to map with parent values, e.g. to normalize
+  parts[[j]]$parent <- parent_parts[[parent_indices[j]]] 
+  mapped_part <- map(parts[[j]])
+  
+  stacked[[parent_indices[j]]] <- stack(stacked[[parent_indices[j]]], mapped_part)
+  parts[[j]] <- stacked[[parent_indices[j]]]
+}
+
+```
+
+
 
 <!-- ## Create Partitions: Partition -->
 
@@ -766,7 +839,7 @@ The map and stack operations can both be performed within a single step of a loo
 
 <!-- Symmetric monoidal preorders also come with some4 computational advantages. Firstly, these summaries are guaranteed to be computable within a single pass through the data, and can also be updated online if new data arrives, without having to refer to the old. This does not necessarily make them superior to other summaries, such as mean or variance, which can also often be computed by collecting multiple constituent summaries in a single pass through the data and them combining them together in one step after (such as sum and count for the mean), and for which online algorithms also often exist too. However, the advantage is that every symmetric monoidal preorder is automatically single pass computable and online - we will never need to look for an algorithm. Secondly, if our plot implements reactive axis limits, since the count within the selection is always guaranteed to be less that or equal to the count within the whole, we only need to keep track of the counts on the whole. For example, in the case of the barplot of counts, we know that the upper y-axis limit will always be equal to the height of the tallest whole bar, and we can safely ignore the sub-bars. If there are $N$ levels of the categorical variable and $K$ selection groups, there will be $N$ whole bars and $N \times K$ sub-bars. This difference might unimportant if $N$ and $K$ are small (as they are likely to be, in the case of the average barplot). However, if there are, for example, two categorical variables with $N$, and $M$ levels, respectively, as in the case of a fluctuation diagram/bubbleplot/treemap, and both $N$ and $M$ have many levels, then having to iterate through all $N \times M \times K$ sub-bar summaries every time an interaction happens might become prohibitive.    -->
 
-```{r process, }
+```{r process}
 #| echo: false
 #| fig-cap: "Illustration of the model structure. Data is split into a hierarchy of partitions (left). Parts within partitions form a graph/tree that can be used to calculate summaries/statistics (middle). Finally, the hierarchy of summaries is plotted via geometric objects (right)."
 #| out.width: "6in"
@@ -776,3 +849,7 @@ The map and stack operations can both be performed within a single step of a loo
 knitr::include_graphics("process.png")
 
 ```
+
+\newpage
+
+# References
