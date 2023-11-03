@@ -14,46 +14,53 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-Interactive data visualization (IDV) has seen a rapid growth in popularity over the last few decades. From the humble roots of early, highly specialized systems, such as those of @fowlkes1969 and @kruskal1964, there has been a steady progress towards more and more general and feature-rich frameworks. The first really "general-purpose" system was *PRIM-9* [@fisherkeller1974], which allowed for exploration of high-dimensional data in scatterplots using projection, rotation, subsetting and masking. Later systems, such as *MacSpin* [@donoho1988], *Lisp-Stat* and *XLisp-Stat* [@tierney1989; @tierney2004], and *XGobi* [@swayne1998] provided rich features such as interactive scaling, rotation, linked selection (or "brushing"), and interactive plotting of smooth fits in scatterplots, as well as interactive parallel coordinate plots and grand tours. They were later followed by other systems such as *Mondrian* [@theus2002], *GGobi* [@swayne2003], *iPlots* [@urbanek2003], and *cranvas* [@xie2014]. Alongside these later developments, which have largely come from the field of statistics, the rise of Web technologies and interactive web apps has spawned its own family of IDV systems. Among these, the earlier systems such as *Prefuse* [@heer2005] and *Flare* [@flare2020] relied on external plugins (Java and Adobe Flash Player, respectively) while later systems became truly Web-native by embracing JavaScript. Among them, *D3*.js [@bostock2011] has grown to great popularity, alongside its high-level interface *plotly*.js,  [@plotly2022], and so have other frameworks such as *Vega* [@satyanarayan2015], *Vega-lite* [@satyanarayan2016], *Altair* [@vanderplas2018], and *Highcharts* [@highcharts2023].  
+Interactive data visualization (IDV) has seen a rapid growth in popularity over the last few decades. From the humble roots of early, highly specialized systems, such as those of @fowlkes1969 and @kruskal1964, there has been a steady progress towards more and more general and feature-rich frameworks. The first general-purpose system was *PRIM-9* [@fisherkeller1974], which allowed for exploration of high-dimensional data in scatterplots using projection, rotation, subsetting and masking. Later systems, such as *MacSpin* [@donoho1988], *Lisp-Stat* and *XLisp-Stat* [@tierney1989; @tierney2004], and *XGobi* [@swayne1998] provided rich features such as interactive scaling, rotation, linked selection (or "brushing"), and interactive plotting of smooth fits in scatterplots, as well as interactive parallel coordinate plots and grand tours. They were later followed by other systems such as *Mondrian* [@theus2002], *GGobi* [@swayne2003], *iPlots* [@urbanek2003], and *cranvas* [@xie2014]. Alongside these later developments, which have largely come from the field of statistics, the rise of Web technologies and interactive web apps has spawned its own family of IDV systems. Among these, the earlier systems such as *Prefuse* [@heer2005] and *Flare* [@flare2020] relied on external plugins (Java and Adobe Flash Player, respectively) while later systems became truly Web-native by embracing JavaScript. Among them, *D3*.js [@bostock2011] has grown to great popularity, alongside its high-level interface *plotly*.js,  [@plotly2022], and so have other frameworks such as *Vega* [@satyanarayan2015], *Vega-lite* [@satyanarayan2016], *Altair* [@vanderplas2018], and *Highcharts* [@highcharts2023].  
 
-Interactive figures now frequently appear in online news articles, business dashboards, and scientific publications and blogs. Yet, despite the proliferation of IDV systems and various taxonomies of interactive features [see e.g. @yi2007], there seems to remain a lack of a general framework for reasoning about interactive data visualizations, in the way that e.g. *grammar of graphics* [@wilkinson2012] provided a way to reason about static visualizations. That is, interactive data visualizations, like all visualizations, require us to process data into statistical summaries that can then be translated into screen coordinates and drawn. However, different types of interaction require vastly different . Some interactions can be implemented by manipulating graphical attributes of the visualization only. For example, to implement panning or zooming, all we need to do is compute the axis limits from the data once. After that, we can forget the original data and merely update the four scalar values (= lower and upper x-axis and y-axis limits) whenever the user performs the requisite actions. However, this is not the case for other, more complex types of interactions. For example, if we want to implement an interactive histogram in which the user can change the binwidth and anchor, we need a way to recompute the number of cases in each bin after either of the two parameters is updated. This means that we have to refer to the original data. Similarly, to implement linked highlighting/brushing, whereby the user can highlight some cases in the data across multiple plots by either clicking or click-and-drag-selecting the corresponding geometric objects in one plot, we need to keep track of which cases belong to which object. 
+Interactive figures now frequently appear in online news articles, business dashboards, and scientific publications and blogs. Yet, despite the wide proliferation of IDV systems and various taxonomies of interactive features [see e.g. @yi2007], there still looms a large unresolved problem in the production of IDVs. That is, interactive data visualizations, like all visualizations, require us to process data into statistical summaries that can then be translated into graphical attributes and drawn. However, in contrast to static visualizations, where all data processing needs to occur only once, IDVs need to respond to user input reactively, with relevant quantities often having to be recomputed many times a second [@wickham2009]. Further, different types of interactions come with different levels of computational complexity [see e.g. @leman2013; @pike2009]. Thus, the way we process the data and implement the interactions matters a lot. Some interactions can be implemented by manipulating graphical attributes of the visualization only. For example, to implement panning or zooming, all we need to do is compute the axis limits once. After that, we can "forget" the original data and merely update the four scalar values (= lower and upper x-axis and y-axis limits) whenever the user performs the requisite actions. However, this is not the case for other, more complex types of interactions. For example, if we want to implement an interactive histogram in which the user can change the binwidth and anchor, we need a way to recompute the number of cases in each bin after either of the two parameters is updated. This means that we have to refer to the original data. Similarly, to implement linked highlighting/brushing, whereby the user can highlight some cases in the data across multiple plots by either clicking or click-and-drag selecting the corresponding geometric objects in one plot, we need to keep track of which cases belong to which object. 
 
-How should we structure the process of computing summary statistics and translating them into graphical coordinates, such that we can do this efficiently in response to user input? @wickham2009 have called for an IDV pipeline or "plumbing". This call has, despite some attempts [e.g. @xie2014], been left largely unaddressed. 
-
+As such, there have been calls for a general interactive data visualization pipeline or "plumbing" [@wickham2009] that would allow us to reason about the production of IDVs in the same way that for example the *grammar of graphics* [@wilkinson2012] has. However, these have, despite some attempts [see e.g. @xie2014; @crossfilter2023], been left largely unaddressed.  
+ 
 # The illusion of objects
 
+The key towards a general IDV framework may lie in a subtle yet profound question that inevitably appears when one tries to produce interactive data visualizations: *when we interact with a plot, what exactly are we interacting with?* On its face, it may seem trivial. A person clicking a bar in an interactive barplot may be convinced that they are interacting with the coloured rectangle on the screen, since, by design, that is the salient "thing" they see change in front of them. And in some way, this is true - by interacting with the bar, we can affect its graphical attributes: we can change its colour, we can squeeze it/stretch it, and so on. Yet, in another, deeper way, this perception of interacting with a plain geometric object is just an illusion. How so? 
 
-The  key towards a general IDV framework may lie in a subtle yet profound question that inevitably appears in the production and use of interactive data visualizations: *when we interact with a plot, what exactly are we interacting with?* On its face, it may seem trivial. A person clicking a bar in an interactive barplot may be convinced that they are interacting with the coloured rectangle on the screen, since, by design, that is the salient "thing" they see change in front of them. And in some way, this is true - by interacting with the bar, we can affect its graphical attributes: we can change its colour, we can squeeze it/stretch it, and so on. Yet, in another, deeper way, this perception of interacting with a plain geometric object is just an illusion. How so? 
-
-The illusion lies in the fact that the bar is not just the geometric object - the coloured rectangle - it is represented by. Instead, the rectangle is only ever meaningful as a "bar" within the context of the plot. We can see this quite easily - if we were to take the coloured rectangle outside of the plot, we would lose some crucial information that the rest of the plot provides.  
+The illusion lies in the fact that the bar is not just a geometric object - the coloured rectangle it is represented by. Instead, the rectangle is only ever meaningful as a "bar" within the context of the plot. We can see this easily - if we were to take the coloured rectangle outside of the plot, we would lose some crucial information that the rest of the plot provides.  
 
 ```{r}
 #| echo: false
 #| out-height: "2in"
+#| out-width: 40%
+#| fig-show: "hold"
 #| fig-align: "center"
-#| fig-cap: "A rectangle is not a bar in a similar way that a painting of a pipe is not a pipe."
+#| fig-cap: "A rectangle is not a bar in a similar way that a painting of a pipe is not a pipe"
 
+par(mar = c(2, 2, 0, 3), cex = 1.5)
+barplot(table(mtcars$cyl), axes = FALSE, col = "indianred", 
+        border = NA, width = 0.25, xlim = c(0, 1), ylim = c(0, 18))
+text(0.5, 16, labels = "These are not rectangles", font = 3)
+axis(2, at = c(0, 5, 10, 15), tick = FALSE, las = 1)
+box(bty = "L")
 knitr::include_graphics("magritte.jpg")
 
 ```
 
-Thus, objects in a plot are imbued with some additional information or structure, beyond their simple geometry. That statement should not seem surprising or controversial to people familiar with data visualization, and indeed geometric objects are considered just one "layer" in, e.g. the *grammar of graphics* [@wilkinson2012]. However, it may be more challenging to define in detail what exactly this "structure" is. There are a few ideas we may be able to muster. First of all, we know that the geometric objects in plots are supposed to represent some underlying data. That much is clear - if the objects in a graphic do not represent any external data but are instead drawn according to some arbitrary rules, we cannot really, in good conscience, call the resulting graphic a "plot". But data is only a part of the story. 
+Thus, objects in a plot are imbued with some additional information or structure, beyond their simple geometries. That should not seem surprising or controversial to people familiar with data visualization. Indeed, for example, geometric objects or `geoms` are considered just one attribute of a plot in the *grammar of graphics* [@wilkinson2012]. However, it may be more challenging to define in detail what exactly this "structure" is. There are a few ideas we may be able to muster. First of all, we know that the geometric objects in plots are supposed to represent some underlying data. That much is clear - if the objects in a graphic do not represent any external data but are instead drawn according to some arbitrary rules, we cannot really, in good conscience, call the resulting graphic a "plot". But data is only a part of the story. 
 
 When drawing plots, we rarely represent the raw data directly. Instead, we often summarize, aggregate, or transform. We do this by applying mathematical functions such as count, sum, mean, log, or the quantile function. And it is the output of these transformations that we then represent by the geometric objects. 
 
-So, when interacting with a bar in an interactive barplot, we do not just interact with a plain geometric object. Instead, we interact with a mathematical function, or, in fact, several of them. This is very important since mathematical functions have properties, and these properties impose limits on what kinds of visualizations and interactions we can meaningfully compose. This is the crux of the argument presented in this text. Before diving deeper, however, let's first define some key terms and draw a rough sketch of the data visualization process as a whole. 
+So, when interacting with a bar in an interactive barplot, we do not just interact with a plain geometric object. Instead, we interact with a mathematical function, or, in fact, several of them. This is very important since functions have properties, and these properties impose limits on what kinds of visualizations and interactions we can meaningfully compose. This is the core argument of the present text. Before diving deeper, however, let's first define some key terms and draw a rough sketch of the data visualization process as a whole. 
 
 # Rough sketch of the data visualization process
 
 To create a data visualization, be it static or interactive, we need several ingredients: data, summaries, scales/coordinate systems, and geometric objects. These should be familiar to most users of interactive data visualization systems. However, it may still be useful to lay them out in order, and examine the specific features and quirks of each one of them.     
 
-First of all, as was mentioned in the previous section, every data visualization needs to be built on top of some underlying data. We can represent this as a set of some arbitrary units of information (data) $D$. Data in the wild usually comes with more structure than that - for example, we often encounter data stored in a tabular ( or "tidy" [@wickham2014]) format, stratified by rows and columns. In that case, we could substitute $D$ by the set of rows $R$, the set of columns $C$, or the set of cell values $R \times C$ (where $\times$ indicates the cartesian product). However, for the purpose of this broad description, we do not have to assume any special structure and just speak of the data units $d \in D$.  
+First of all, every data visualization needs to be built on top of some underlying data. We can represent this as a set of some arbitrary units of information (or "datapoints") $D$. Data in the wild usually comes with more structure than that - for example, we often encounter data stored in a tabular [or "tidy", @wickham2014] format, stratified by rows and columns. In that case, we could represent $D$ as the set of rows $R$, the set of columns $C$, or the set of cell values $R \times C$ (where $\times$ indicates the cartesian product). However, for the purpose of this general description, we do not have to assume any special structure and just speak of $n$ datapoints $d \in D$.  
 
-Secondly, at some point during the visualization process, we need to transform the set of data units $D$ into a set of collections of summaries $S$ via a function $\alpha$. The summarizing function $\alpha$ can have many different flavours. It may be the case that $\alpha$ is one-to-one (bijection), in which case there is one summary for every unit of data (and vice versa). This is the case, for example, with the prototypical scatterplot, in which $\alpha$ is just the identity function (every unit of data/row gets assigned one "point"). However, more often, $\alpha$ is many-to-one (surjection), which means that each summary may be composed of multiple units of data. Examples of this include the typical barplot, histogram, density plot, or violin plot. When $\alpha$ is many-to-one, it will typically reduce the cardinality of the data, such that $\lvert S \lvert \leq \lvert D \lvert$ (e.g. in a typical barplot, there will be fewer bars than there are rows of the data, unless each row represents a unique level of the categorical variable). To turn $n$ units of data into $k$ collections of summaries, we need to somehow stratify the data on one or more variables. These variables may either come from the data directly (i.e. the variables used are "factors", as in the case of a barplot or a treemap) or may themselves be a summary of the data (as in the case of histogram bins). Importantly also, each collection of summaries $s \in S$ may (and usually will) hold multiple values, produced by a different constituent function each - for example, the collection $s$ for a single boxplot "box" will consist of the median, the first and third quartile, the minimum and maximum, and the outlier values of some variable, all for a given level of some stratifying variable (which itself will also be an element of $s$). Finally, the output of these constituent functions may also depend on some external parameters, which may be either directly supplied by the user or heuristically inferred from the data by the visualization system itself. Examples of such external parameters include anchor and binwidth in a histogram.
+Second, at some point during the visualization process, we need to transform the datapoints $D$ into a set of collections of summaries $S$ via some function $\alpha$. This summarizing function can come many different forms. It may be the case that $\alpha$ is one-to-one (bijection), in which case there is one summary for every unit of data (and vice versa). This is the case, for example, in the typical scatterplot, in which $\alpha$ is just the identity function (every unit of data/row gets assigned one point). However, more often, $\alpha$ is many-to-one (surjection), which means that multiple units of data may be merged into a single summary. Examples of this include the typical barplot, histogram, density plot, or violin plot. When $\alpha$ is many-to-one, it will typically reduce the cardinality of the data, such that $k = \lvert S \lvert  \leq \lvert D \lvert = n$ (e.g. in a typical barplot, there are fewer bars than there are rows of data, unless there is a unique level of the categorical variable in each row). Further, to turn the $n$ units of data into $k$ collections of summaries, we need to somehow stratify the data on one or more variables. These variables may either come from the data directly (i.e. the variables used are "factors", as in the case of a barplot or a treemap) or may themselves be a summary of the data (as in the case of histogram bins). Importantly also, each collection of summaries $s \in S$ may (and usually will) hold multiple values, produced by a different constituent function each. For example, the collection of summaries $s$ for a single boxplot "box" will consist of the median, the first and third quartile, the minimum and maximum, and the outlier values of some variable, all for a given level of some stratifying variable (which itself will also be an element of $s$). Finally, the output of these constituent functions may also depend on some external parameters, which may be either directly supplied by the user or heuristically inferred from the data by the visualization system. Examples of such external parameters include the anchor and binwidth in a histogram, the density bandwidth in a density plot, or the list of knots for a smooth fit.
 
-Thirdly, each collection of summaries $s \in S$ needs to be translated from the data- (or summary-) coordinates to graphical coordinates/attributes $g \in G$, via a function $\beta$. This means that each summary value gets mapped or "scaled" to a graphical attribute via a constituent scaling function. Note that this mapping preserves cardinality - there are as many collections of graphical attributes as there are collections of summaries, $\lvert G \lvert = \lvert S \lvert$. For numeric/continuous summaries, scales often come in the form of linear transformations, such that the minimum and maximum of the data are mapped near the minimum and maximum of the plotting region, respectively. Continuous scales may also provide non-linear transformations such as the log-transformation or binning, and the values may even get mapped to discrete graphical attributes (e.g. binned values may get translated to one of 5 different shades of a colour). Likewise, discrete summaries can be translated to either continuous (e.g. position) or discrete (e.g. colour) graphical attributes. There are also coordinate systems, which may further translate values from multiple scales simultaneously, e.g. by taking values in cartesian (rectangular plane) coordinates and translating them to polar (radial) coordinates. Either way, $\beta$ can be viewed as one function, representing the composition of any number of scales and coordinate systems applied to various summaries.  
+Third, each collection of summaries $s \in S$ needs to be translated from the data- (or summary-) coordinates into graphical coordinates/attributes $g \in G$, via a function $\beta$. This means that each summary value gets mapped or "scaled" to a graphical attribute via a constituent scaling function. Note that this mapping preserves cardinality - there are as many collections of graphical attributes as there are collections of summaries, $\lvert G \lvert = \lvert S \lvert = k$. For numeric/continuous summaries, scales often come in the form of linear transformations, such that the minimum and maximum of the data are mapped near the minimum and maximum of the plotting region, respectively. Continuous scales may also provide non-linear transformations such as the log-transformation or binning, and the values may get mapped to discrete graphical attributes (e.g. a binned value may get mapped to one of 5 different shades of a colour). Likewise, discrete summaries can be translated to either continuous (e.g. position) or discrete (e.g. colour) graphical attributes. There are also coordinate systems, which may further translate values from multiple scales simultaneously, e.g. by taking values in cartesian (rectangular plane) coordinates and mapping them to polar (radial) coordinates. Either way, $\beta$ can be viewed as one function, representing the composition of any number of scales and coordinate systems applied to various summaries.  
 
-Finally, the collections of graphical attributes/coordinates $g \in G$ are drawn as geometric objects inside the plotting region, which we can represent as the set of pixels $P$. While the act of drawing does take the collections of graphical coordinates $g \in G$ as inputs, it does not simply return an output for each input (like a mathematical function would), but instead mutates the state of the graphical device via a side effect $\gamma^*$, i.e. changing the colour values of pixels in $P$. In other words, how the graphic ends up looking may depend, for example, on the order in which we draw the objects. For example, when drawing points of different colour, some points may end up being plotted over others, and thus the final result may depend on whether we draw red points first and yellow second or vice versa. As such, $\gamma^*$ is not a simple mapping from $G$ to $P$ and we cannot call it a true mathematical function (since that would require it to merely assign an output to each input). The geometric objects may be simple, such as points, lines, or bars, or compound, such as a boxplot or pointrange. Importantly, each attribute necessary to draw the geometric object, such as x- and y-position, width, height, area, etc... needs to be present in the corresponding $g$.     
+Finally, the collections of graphical attributes/coordinates $g \in G$ are drawn as geometric objects inside the plotting region via the graphic device. We can represent represent the plotting region as the set of pixels $P$. While the act of drawing does take the collections of graphical coordinates $g \in G$ as inputs, it does not simply return an output for each input (like a mathematical function would), but instead mutates the state of the graphical device via a side effect $\gamma^*$, i.e. changing the colour values of pixels in $P$. In other words, how the graphic ends up looking may depend, for example, on the order in which we draw the objects (a salient example of this is overplotting). As such, $\gamma^*$ is not a simple mapping from $G$ to $P$ and we cannot call it a true mathematical function, since that would require it to merely assign an output to each input. The geometric objects may be simple, such as points, lines, or bars, or compound, such as a boxplot or pointrange. Finally, it is important to mention that each attribute necessary to draw a geometric object, such as x- and y-position, width, height, area, etc... needs to be present in the corresponding $g$.     
 
 The whole process can be summarized as follows:
 
@@ -67,8 +74,486 @@ Or, equivalently:
 \text{(data)} \overset{\text{summarize}}{\longrightarrow} \text{(summaries)} \overset{\text{translate/encode}}{\longrightarrow} \text{(graph. coordinates)} \overset{\text{draw}^*}{\Rightarrow} \text{(graph. device state)} (\#eq:recipe2)
 \end{equation}
 
-The above should be fairly non-controversial description of how a data visualization is produced, and applies equally well to static as well as interactive visualizations. 
+The above should be fairly non-controversial description of how a data visualization is produced, and applies equally well to static as well as interactive visualizations. There are a few caveats. Firstly, while not always the case, *order* can be important. For example, while we can draw the bars in a barplot in no particular order, lines in a lineplot need to be drawn by connecting points in specific order, otherwise we can end up with completely different-looking visualization. This means that either $S$, $G$, or their components, may need to be ordered. Secondly, *hierarchy* can also be important and the collections may form tree/graph-like structure. This is particularly relevant when stacking. For example, when drawing a stacked barplot, we need to stack the graphical coordinates representing the sub-bars on top of each other, such that each sub-bar is stacked within the appropriate parent-bar and in the correct order (e.g. such that sub-bars belonging to group 2 always go on top group 1 sub-bars). If it is the case that order matters for either $\alpha$ or $\beta$, then we cannot call them true functions either, since each of the elements in their domain needs to be aware of the other elements. That is, when stacking bars in a stacked barplot, we need to "remember" what bars we have stacked before. 
 
+# The problem of statistical summaries
+
+Circling back to the illusory rectangle in a barplot, we can now talk about interacting with the summarizing function $\alpha$. In a typical barplot, $\alpha$ consists of the simple act of "counting" how many times each of the $k$ unique levels of the categorical variable appears. We could substitute a different statistical for $\alpha$, e.g. taking the sum or mean of the values of some other (continuous) variable in the data. But herein lies a problem.    
+
+While some forms of the summarizing function $\alpha$ may produce perfectly valid static visualizations, when it comes to interactive visualization, not every statistical summary "works" equally well. Instead, some interactive features impose additional constraints and so some summaries may end up producing better or more coherent IDVs than others. Let's illustrate the problem with a simple case study.
+
+## Case study: counts and means
+
+Linked brushing or highlighting is one of the most popular and useful types of interactive features used in interactive data visualization [see e.g. @buja1996]. It allows the user to select cases within the data by by e.g. clicking or click-and-drag selecting objects within one plot and the selected cases are then highlighted across all other "linked" (hence the name) plots. The usefulness of linked brushing comes from the fact that it allows the user to rapidly "drill-down" [@dix1998; @theus2002] and compare different subsets of the data.
+
+Let's imagine we have three interactive plots: a classical scatterplot, a barplot of summarizing the count of cases within the levels of some categorical variable $x$, and a barplot summarizing the mean of some other variable $y$, also within the levels of $x$. The plots are linked such clicking/clicking-and-dragging objects in one plot will highlight the corresponding cases in the other plots. Intuitively, it might seem that the two barplots should be equally valid/useful representations of the data. However, if we consider these plots in the context of linked brushing, few subtle-yet-fundamental differences emerge. 
+
+```{r empty, echo=FALSE }
+#| fig.height: 3
+#| fig.cap: "The problem of representing empty selection. a) An illustration of selection by linked brushing. b) In the barplot of counts, the count within an empty selection (red) is zero and so an absence of a bar accurately represents the count of zero. c) In the barplot of means, the mean of an empty selection is not defined. Absence of a bar could indicate that either no cases are selected or that some cases are selected and their mean is equal to the lower y-axis limit (zero in this case)."
+
+wt <- mtcars$wt
+mpg <- mtcars$mpg
+cyl <- mtcars$cyl
+disp <- mtcars$disp
+one <- numeric(nrow(mtcars)) + 1
+
+cyl_unique <- c(4, 6, 8)
+
+wt_lim0 <- 1.45
+wt_lim1 <- 2.5
+mpg_lim0 <- 25
+mpg_lim1 <- 34.5
+
+cyl_unique <- c(4, 6, 8)
+
+selected <- ((wt > wt_lim0) & (wt < wt_lim1) & (mpg > mpg_lim0) & mpg < mpg_lim1)
+col <- c("grey80", "indianred")[selected + 1]
+selected_cyls <- c(4, 6, 8) %in% unique(cyl[selected])
+
+bars11 <- tapply(one, cyl, sum)
+bars12 <- tapply(one[selected], cyl[selected], sum)
+
+bars21 <- tapply(disp, cyl, mean)
+bars22 <- tapply(disp[selected], cyl[selected], mean)
+
+axis_fun1 <- function() {
+  axis(1, tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+axis_fun2 <- function() {
+  axis(1, at = c(4, 6, 8), tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+par(mfrow = c(1, 3), mar = c(5, 4, 2, 0.5))
+
+plot(wt, mpg, pch = 20, col = col, cex = 2,
+     axes = FALSE, xlab = "Weight", ylab = "Mileage")
+rect(wt_lim0, mpg_lim0, wt_lim1, mpg_lim1, lty = "dashed")
+title(main = "a.", adj = 0, line = 0.5)
+axis_fun1()
+
+barx <- c(4, 6, 8)
+barx0 <- barx - 0.75
+barx1 <- barx + 0.75
+
+barx_selected<- barx[selected_cyls]
+barx_notselected <- barx[!selected_cyls]
+barx0_selected <- barx0[selected_cyls]
+barx1_selected <- barx1[selected_cyls]
+barx0_notselected <- barx0[!selected_cyls]
+barx1_notselected <- barx1[!selected_cyls]
+
+plot(c(2, 10), c(0, max(bars11)), type = "n", 
+     axes = FALSE, xlab = "Cylinders", ylab = "Count")
+rect(barx0, 0, barx1, bars11,
+     col = "grey80", border = NA)
+rect(barx0_selected, 0, barx1_selected, bars12,
+     col = "indianred", border = NA)
+text(barx, c(bars12, 0, 0) + 0.75, labels = c(bars12, "0", "0"),
+     col = "indianred")
+title(main = "b.", adj = 0, line = 0.5)
+axis_fun2()
+
+plot(c(2, 10), c(0, max(bars21)), type = "n",
+     axes = FALSE, xlab = "Cylinders", ylab = "Mean displacement")
+rect(cyl_unique - 0.75, 0, cyl_unique + 0.75, bars21,
+     col = "grey80", border = NA)
+rect(barx0_selected, 0, barx1_selected, bars22,
+     col = "indianred", border = NA)
+rect(barx0_notselected, 0, barx1_notselected, 100,
+     col = NA, border = "indianred", lty = "dashed")
+text(barx_notselected, 50, labels = "?", col = "indianred", cex = 1.5)
+text(barx_selected, bars22 + 10, labels = round(bars22), col = "indianred")
+title(main = "c.", adj = 0, line = 0.5)
+axis_fun2()
+
+```
+
+## Empty selections
+
+First, as is shown in Figure \@ref(fig:empty), how do we represent empty selections? In the case of counts, we have a meaningful default value - zero - as in "the number of cases in an empty selection is zero". In other words, the absence of a bar in a barplot unambiguously indicates that the count for the corresponding level of the stratifying variables is zero.
+
+However, for means, there is no such default value: the mean of an empty set is not defined. As a result, whenever we encounter an empty selection, we are faced with the problem of how to represent it. We could choose not to draw the bar representing the empty selection, however, that decouples the statistical summary from the visual representation. That is, the absence of a bar may now indicate that *either* no cases are selected *or* that some cases are selected and that their mean is equal to the lower y-axis limit. 
+
+```{r bigger}
+#| echo: FALSE
+#| fig.height: 3
+#| fig.cap: "The relationship between selection vs. the whole. a) An illustration of selection by linked brushing. b) In the barplot of counts (middle), the count within a selection (red) is always less than or equal to the count within the whole and the outline of the bars does not change. c) In the barplot of means, the mean of a selection can be greater and so the outline of the bars will change in response to user input."
+
+wt <- mtcars$wt
+mpg <- mtcars$mpg
+cyl <- mtcars$cyl
+disp <- mtcars$disp
+one <- numeric(nrow(mtcars)) + 1
+
+cyl_unique <- c(4, 6, 8)
+
+wt_lim0 <- 2
+wt_lim1 <- 3.5
+mpg_lim0 <- 20
+mpg_lim1 <- 26.5
+
+selected <- ((wt > wt_lim0) & (wt < wt_lim1) & (mpg > mpg_lim0) & mpg < mpg_lim1)
+col <- c("grey80", "indianred")[selected + 1]
+selected_cyls <- c(4, 6, 8) %in% unique(cyl[selected])
+
+bars11 <- tapply(one, cyl, sum)
+bars12 <- tapply(one[selected], cyl[selected], sum)
+
+bars21 <- tapply(disp, cyl, mean)
+bars22 <- tapply(disp[selected], cyl[selected], mean)
+
+axis_fun1 <- function() {
+  axis(1, tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+axis_fun2 <- function() {
+  axis(1, at = c(4, 6, 8), tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+par(mfrow = c(1, 3), mar = c(5, 4, 2, 0.5))
+
+plot(wt, mpg, pch = 20, col = col, cex = 2,
+     axes = FALSE, xlab = "Weight", ylab = "Mileage")
+rect(wt_lim0, mpg_lim0, wt_lim1, mpg_lim1, lty = "dashed")
+title(main = "a.", adj = 0, line = 0.5)
+axis_fun1()
+
+barx <- c(4, 6, 8)
+barx0 <- barx - 0.75
+barx1 <- barx + 0.75
+
+barx_selected<- barx[selected_cyls]
+barx_notselected <- barx[!selected_cyls]
+barx0_selected <- barx0[selected_cyls]
+barx1_selected <- barx1[selected_cyls]
+barx0_notselected <- barx0[!selected_cyls]
+barx1_notselected <- barx1[!selected_cyls]
+
+plot(c(2, 10), c(0, max(bars11)), type = "n", 
+     axes = FALSE, xlab = "Cylinders", ylab = "Count")
+rect(barx0, 0, barx1, bars11,
+     col = "grey80", border = NA)
+rect(barx0_selected, 0, barx1_selected, bars12,
+     col = "indianred", border = NA)
+text(barx, c(bars12, 0, 0) + 0.75, labels = c(bars12, "0", "0"),
+     col = "indianred")
+title(main = "b.", adj = 0, line = 0.5)
+axis_fun2()
+
+plot(c(2, 10), c(0, max(bars21)), type = "n",
+     axes = FALSE, xlab = "Cylinders", ylab = "Mean displacement")
+rect(cyl_unique - 0.75, 0, cyl_unique + 0.75, bars21,
+     col = "grey80", border = NA)
+rect(barx0_selected, 0, barx1_selected, bars22,
+     col = adjustcolor("indianred", 0.5), border = NA)
+rect(barx0_notselected, 0, barx1_notselected, 100,
+     col = NA, border = "indianred", lty = "dashed")
+text(barx_notselected, 50, labels = "?", col = "indianred", cex = 1.5)
+text(barx_selected, bars22 + 10, labels = paste0(round(bars22), "!"), col = "indianred")
+title(main = "c.", adj = 0, line = 0.5)
+axis_fun2()
+
+```
+
+## Part vs. the whole
+
+Second, as shown in Figure \@ref(fig:bigger), how does the summary on the selection relate to the summary on the whole? In the case of the barplot of counts, the height of the sub-bar is always less than or equal ($\leq$) to the height of the whole bar (because so is the count). Thus, we can always draw the sub-bar over the whole bar, and the whole bar act as a stable visual reference: the outline of multiple sub-bars stacked on top of each other will always remain the same no matter which cases of the data are selected. In fact, we can either draw the whole bar (as shown in grey in Figure \@ref(fig:bigger)) and draw the selected sub-bar (red) over it, both starting from the y-axis origin (0), or we can draw a red sub-bar and the "leftover" grey-sub bar stacked on top, starting from the top y-coordinate of the selection bar and with $\textbf{height} = (\text{count of the whole} - \text{count of the selection})$. The result will be visually identical.
+
+Means do not share this property. Specifically, the mean of a subset can be greater than the mean of the superset, and so the "sub-bars" representing the selection may end up taller then the bar representing all cases within the level of the stratifying variable. As a result, if we draw the sub-bars on top of the whole bar, the whole bar may be completely obscured by the sub-bars (as shown in Figure \@ref(fig:bigger)). We could draw the selection sub-bars as semitransparent, or draw the the bars side-by-side instead of on top of each other (i.e. technique known as "dodging"), however, the question then remains how to display the non-selected (grey) cases - do we draw the "whole" bar that remains the same height throughout interaction, or the "leftover" bar whose height changes with the selection? Also, if we choose to draw the bars side-by-side, will the whole bar be initially wide and shrink in response to selection to accommodate the selection bars, or will it be narrow from the initial render? Finally, if the user brushes the side-by-side bars, will they be able to select individual bars or will brushing one select all of them? 
+
+## Combining parts
+
+Finally, as displayed in Figure \@ref(fig:stacking), when multiple selections/groups are present, can we combine them in a meaningful way? Again, in the case of the barplot of counts, there is an idiomatic way of doing this: we can stack the counts across the groups and the corresponding bars on top of each other. The height of the resulting bar will then always be identical to the count of the whole (unselected) bar.
+
+For means, there is no such way to combine the quantities. If we were to stack the bars on top of each other, the resulting statistic (the sum of the group means) would hardly be informative. Worse yet, if we were to take the mean of the group means, the resulting statistic will be (almost surely) different from the mean of the whole: the mean of the group means $\neq$ the grand mean. And again, as was mentioned in the previous section, the grand mean may be less than any of the group means. Since we cannot meaningfully combine the statistics, we could draw the bars side-by-side, but again, we run into considerations about how to render the base group and the selection, and how to choose the bar width.
+
+```{r stacking}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: "Combining selections. a) An illustration of selection by linked brushing, with two groups. b) In the barplot of counts, statistics can be stacked on top of each other such that the count of the stacked bar is identical to the count of the whole bar (i.e. one that would result from no selections). c) In the barplot of means, no such procedure for combining statistics exists."
+
+wt <- mtcars$wt
+mpg <- mtcars$mpg
+cyl <- mtcars$cyl
+disp <- mtcars$disp
+one <- numeric(nrow(mtcars)) + 1
+
+cyl_unique <- c(4, 6, 8)
+group1 <- (wt > 2.5) & (wt < 4.5) & (mpg < 18.5)
+group2 <- (wt > 2.5) & (wt < 4.5) & (mpg > 18.5)
+
+group <- group1 * 1 + group2 * 2 + 1
+cols <- c("grey80", "steelblue", "indianred")
+col <- cols[group]
+
+
+axis_fun1 <- function() {
+  axis(1, tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+axis_fun2 <- function() {
+  axis(1, at = c(4, 6, 8), tick = FALSE, line = -0.5)
+  axis(2, tick = FALSE, las = 1, line = -0.5)
+  box(bty = "L")
+}
+
+bars11 <- tapply(one, cyl, sum)
+bars12 <- tapply(one, list(cyl, group), sum)
+bars12[is.na(bars12)] <- 0
+
+bars21 <- tapply(disp, cyl, mean)
+
+par(mfrow = c(1, 3), mar = c(5, 4, 2, 0.5))
+
+plot(wt, mpg, pch = 19, col = col, cex = 1.5,
+     axes = FALSE, xlab = "Weight", ylab = "Mileage")
+title(main = "a.", adj = 0, line = 0.5)
+axis_fun1()
+
+plot(c(2, 10), c(0, max(bars11)), type = "n",
+     axes = FALSE, xlab = "Cylinders", ylab = "Count")
+rect(cyl_unique - 0.75, 0, cyl_unique + 0.75, bars11, 
+     col = "grey80", border = NA)
+for (i in 1:3) {
+  counts <- bars12[i, ]
+  y0 <- cumsum(c(0, counts[-length(counts)]))
+  y1 <- cumsum(counts)
+  
+  rect(cyl_unique[i] - 0.75, y0, cyl_unique[i] + 0.75, y1, 
+       col = cols, border = NA)
+} 
+text(c(4, 4, 6, 6, 8, 8, 8), c(8, 11, 2, 7, 3, 12, 14) - 0.75, 
+     labels = c("+8", "+3", "+2", "+5", "+3", "+9", "+2"), 
+     col = c("grey40", "white", "white", "white", "grey40", 
+             "white", "white"))
+title(main = "b.", adj = 0, line = 0.5)
+axis_fun2()
+
+plot(c(2, 10), c(0, max(bars21)), type = "n",
+     axes = FALSE, xlab = "Cylinders", ylab = "Mean displacement")
+rect(cyl_unique - 0.75, 0, cyl_unique + 0.75, bars21, 
+     col = "grey80", border = NA)
+text(rep(c(4, 6, 8), each = 3), rep(25 * 1:3, 3), labels = "?",
+     col = rep(c("grey40", "steelblue", "indianred"), 3))
+title(main = "c.", adj = 0, line = 0.5)
+axis_fun2()
+
+
+```
+
+## Some statistics are better than others
+
+To summarize, counts, as implemented in a typical barplot, provide:
+
+a. An unambiguous way to display empty selections (absence of a bar = a count of zero)
+b. A stable visual reference (the count within a sub-bar $\leq$ the count within the whole bar)
+c. A way to combine the statistics together (the sum of the sub-bar counts = the count of whole bar). 
+
+Means do not share these properties: mean of an empty selection is not defined, the mean of a selection is not guaranteed to be less than the mean of the whole, and the mean of group means may be different from the grand mean. Importantly, these properties or lack thereof are not tied to any specific plot type (e.g. a barplot) but are instead tied to the statistic underlying the plot (count/mean).
+
+There are of course ways to display means such that linked brushing is possible. The key point, however, is that to make an IDV with means, many more decisions need to be made in order to produce a visualization that is at least somewhat visually and interactively coherent. Consequently, since many of these decision are arbitrary and none is more "natural" than any other, a person interacting with a linked barplot of means for the first time may be surprised by how the plot behaves. Conversely, for the barplot of counts, there *are* such natural solutions readily available. In fact, this may explain why barplots of counts are popular in systems which implement linked brushing. 
+
+One might wonder if these problems are just a quirk of linked brushing. However, one runs into them elsewhere as well. For example, stacking means will not make sense in static plots either. Further, we will run into some of the same issues with any other interactive feature that deals with summary statistics computed on parts of the data. If, for example, on top of linked brushing, we wanted to implement a pop-up window that displays summary statistics within a given object as text, we would still have to contend with the problem of how to display empty selections. Here, there is perhaps a simple solution: we could display the mean of an empty selection as some special value, for example `NA`, `undefined`, or an empty string, `""`. However, by doing so, we have to step outside of the value type of summaries on non-empty selections (real number/`float`). While this may not be a problem in most types of statistical software we may use, it still does add some complexity to our code, since whatever functions rely on means (such as the display function) now have to be generic over `float` and `NA`/`underfined`/`""`. On the other hand, there is something natural about counts having the value for empty selections (zero) be of the same type as all other values (`int`).
+
+Are counts unique in being so well-behaved in this way? The short answer is "no". For example, sums or products (of values $\geq 1$) conform to all three properties listed above. In other words, in the context of linked brushing, a stacked barplot will behave equally well if it display sums (not surprising) or products (perhaps somewhat surprising?). In fact, there is whole a class of mathematical functions, or more precisely mathematical structures, that share these nice properties. To discuss these, let's first lay the groundwork with some relevant theory.   
+
+# Few Relevant Bits of Category Theory
+
+The treatment below follows mainly from parts of @fong2019, @lawvere2009, and @milewski2018. Category theory is a very rich and deep subject, and this treatment only goes over a few basic introductory concepts. Further, these concepts are common to other parts of mathematics as well, such as abstract algebra or group theory, and so it could be argued that the term "category theory" is out of place. Nonetheless, I include the term because this is how I discovered the concepts, and I think it provides a useful signpost for anyone who might want to dive deeper. I hope that any mathematician who might read this can tolerate the pedestrian nature on display here. But that is also somewhat the point - even a few basic concepts might provide great value when thinking about (interactive) visualizations.   
+
+## Functions
+
+A function is a mapping between two sets. More specifically, let $S$ be the set of sources (also called the *domain*) and $T$ be the set of possible targets (also called the *codomain*). Then, one way to think of a function is as a subset $F \subseteq S \times T$ of valid source-target pairs $(s, t)$, such that for every $s \in S$ in there exists a unique $t \in T$ with $(s, t) \in F$. The function can then be thought of as the process of picking a target for any valid source it is given.
+
+If every target in the function's codomain can be reached via the function, that is, if for a function $f$ and for all $t \in T$ there exists a $s \in S$ such that $f(s) = t$, then we call the function a *surjective* or *onto* function, see Figure \ref{fig:functions}a. If each source leads to a unique target, i.e. for $s_1, s_2 \in S$, if $f(s_1) = t$ and $f(s_2) = t$, then $s_1 = s_2$, then it is an *injective* or *one-to-one* function, see Figure \ref{fig:functions}b. Also, for any given subset of targets, we can ask about the subset of sources that could have produced them, a *pre-image*. That is, for $T_i \subseteq T$ we can define $f^{-1}(T_i) = \{ s \in S \lvert f(s) \in T_i \}$. 
+
+If the domain of one function matches the codomain of another, the functions can be composed to form a new function. Specifically, if we have two functions $f: X \to Y$ and $g: Y \to Z$, we can form a new function $h = g(f(x)) = g \circ f$ (read "$g$ after $f$") such that $h: X \to Z$.
+
+```{r functions}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: "Two types of functions: a) surjective, b) injective."
+
+library(grid)
+library(gridExtra)
+
+domain_pts1 <- seq(0.25, 0.75, 0.05)
+codomain_pts1 <- seq(0.35, 0.65, 0.05)
+mapping1 <- c(1, 1, 2, 2, 3, 4, 4, 4, 5, 6, 7)
+
+codomain_pts2 <- domain_pts1
+domain_pts2 <- codomain_pts2[-c(1, length(codomain_pts2))]
+
+grid.newpage()
+grid.text("a.", 0.1, 0.9, gp = gpar(fontface = "bold"))
+pushViewport(viewport(x = 0.25, width = 0.5))
+grid.ellipse(0.5, 0.75, 15, pi / 2, 0.2)
+grid.ellipse(0.5, 0.25, 15, pi / 2, 0.2)
+grid.points(domain_pts1, rep(0.75, length(domain_pts1)), 
+            default.units = "npc")
+grid.points(codomain_pts1, rep(0.25, length(codomain_pts1)), 
+            default.units = "npc")
+grid.segments(domain_pts1, rep(0.75, length(domain_pts1)),
+              codomain_pts1[mapping1], rep(0.25, length(domain_pts1)),
+              arrow = arrow(length = unit(0.025, "npc")))
+
+popViewport()
+pushViewport(viewport(x = 0.75, width = 0.5))
+grid.text("b.", 0.1, 0.9, gp = gpar(fontface = "bold"))
+grid.ellipse(0.5, 0.75, 15, pi / 2, 0.2)
+grid.ellipse(0.5, 0.25, 15, pi / 2, 0.2)
+grid.points(domain_pts2, rep(0.75, length(domain_pts2)), 
+            default.units = "npc")
+grid.points(codomain_pts2, rep(0.25, length(codomain_pts2)), 
+            default.units = "npc")
+grid.segments(domain_pts2, rep(0.75, length(domain_pts2)),
+              domain_pts2, rep(0.25, length(domain_pts2)),
+              arrow = arrow(length = unit(0.025, "npc")))
+
+```
+
+## Partitions
+
+One useful thing we can do with functions is to form partitions. Specifically, given some arbitrary set $A$, we can assign every element a label from a set of part labels $P$ via a surjective function $f : A \to P$. Conversely, we can then take any part label $p \in P$ and recover the corresponding subset of $A$ by pulling out its pre-image: $f^{-1}(p) = A_p \subseteq A$. We can use this to define partitions in another way, without reference to $f$: a partition of $A$ consists of a set of part labels $P$, such that, for all $p \in P$, there is a non-empty subset $A_p$ and:
+
+$$A = \bigcup_{p \in P} A_p \qquad \text{and} \qquad \text{if } p \neq q, \text{ then } A_p \cap A_q = \varnothing$$
+I.e. the parts $A_p$ jointly cover the entirety of $A$ and parts cannot share any elements.
+
+We can rank partitions by their coarseness. That is, for any set $A$, the coarsest partition is one with only one part label $P = \{ 1 \}$, such that each element of $A$ gets assigned $1$ as label. Conversely, the finest partition is one where each element gets assigned its own unique part label, such that $\lvert A \lvert = \lvert P \lvert$. Finally, given two partitions, we can form a finer (or at least as fine) partition by taking their intersection, i.e. by taking the set of all unique pairs of labels that co-occur for any $a \in A$ as the new part labels. For example, if $A = \{ 1, 2, 3 \}$ and partition 1 assigns part labels $P_1 = \{x, y \}$ to $A$ such that $f_1(1) = x, \; f(2) = x, \; f(3) = y$, and partition 2 assigns part labels $P_2 = \{ \rho, \sigma \}$ such that $f_2(1) = \rho, \; f_2(2) = \sigma, \; f_2(3) = \sigma$, then the intersection partition will have part labels $P_3 = \{ (x, \rho), (x, \sigma), (y, \sigma) \}$ such that $f_3(1) = (x, \rho), \; f_3(2) = (x, \sigma), \; f_3(3) = (y, \sigma)$.   
+
+## Preorders
+
+A preorder is a set $X$ equipped with a binary relation $\leq$ that conforms to two simple properties:
+
+1. $x \leq x$ for all $x \in X$ (reflexivity)
+2. if $x \leq y$ and $y \leq z$, then $x \leq z$, for all $x, y, z \in X$ (transitivity)
+
+Simply speaking, this means that between any two elements in $X$, there either is a relation and the elements relate (one element is somehow "less than or equal" to the other), or the two elements do not relate. 
+
+An example of a preorder is the family tree, with the underlying set being the set of family members ($X = \{  \textbf{daughter}, \textbf{son}, \textbf{mother}, \textbf{father}, \textbf{grandmother}, ... \}$) and the binary relation being ancestry or familial relation. Thus, for example, $\textbf{daughter} \leq \textbf{father}$, since the daughter is related to the father, and $\textbf{father} \leq \textbf{father}$, since a person is related to themselves. However, there is no relation ($\leq$) between $\textbf{father}$ and $\textbf{mother}$, since they are not related. Finally, since $\textbf{daughter} \leq \textbf{father}$ and $\textbf{father} \leq \textbf{grandmother}$, then, by reflexivity, $\textbf{daughter} \leq \textbf{grandmother}$.
+
+We can further constrain preorders by imposing additional properties, such as:
+
+3. If $x \leq y$ and $y \leq x$, then $x = y$ (anti-symmetry)
+4. Either $x \leq y$ or $y \leq x$ (comparability)
+
+If a preorder conforms to 3., we speak of a partially ordered set or *poset*. If it conforms to both 3. and 4., then it is a *total order*. 
+
+## Monoids
+
+A monoid is a tuple $(M, e, \otimes)$ consisting of:
+
+a. A set of objects $M$
+b. A neutral element $e$ called the *monoidal unit*
+c. A binary operation $\otimes: M \times M \to M$ called the *monoidal product*
+
+Such that:
+
+1. $m \otimes e = e \otimes m = m$ for all $m \in M$ (unitality)
+2. $m_1 \otimes (m_2 \otimes m_3) = (m_1 \otimes m_2) \otimes m_3 = m_1 \otimes m_2 \otimes m_3$ for all $m_1, m_2, m_3 \in M$ (associativity)
+
+In simple terms, monoids encapsulate the idea that *the whole is exactly the "sum" of its parts* (where "sum" can be replaced by any operation that conforms to the rules). Specifically, we have some elements in $M$ and a way to combine them $\otimes$, such that when we combine the same elements we always get the same result, no matter where we put the brackets (i.e. something like "the order does not matter", although that is not precisely right, more on that later). Finally, we have some neutral element that when combined with some element $m$ yields back the same element $m$.  
+
+For example, take summation on natural numbers, $(\mathbb{N}, 0, +)$:
+
+$$1 + 0 = 0 + 1 = 1 \qquad \text{(unitality)}$$
+$$1 + (2 + 3) = (1 + 2) + 3 = 1 + 2 + 3 \qquad \text{(associativity)}$$
+
+Likewise, products of real numbers $(\mathbb{R}, 1, \times)$ are also a monoid, and so is multiplication of $n \times n$ square matrices $(\mathbf{M}_{n \in \mathbb{Z}}, \mathbf{I}, \cdot)$, where $\mathbf{I}$ is the identity matrix and $\cdot$ stands for an infix operator that is usually omitted. As a counterexample, exponentiation does not meet the definition of a monoid, since it is not associative: $x^{(y^z)} \neq (x^y)^z$. 
+
+We may want to impose further restrictions on monoids, for example:
+
+3. $m_1 \otimes m_2 = m_2 \otimes m_1$ for all $m_1, m_2 \in M$ (commutativity)
+
+Both commutativity and associativity can be viewed as "order does not matter" rules, however, they are fundamentally different. Let's imagine our set of objects consists of three wires of different colours $\{ \textbf{red}, \textbf{green}, \textbf{blue} \}$ and the monoidal product consists of connecting wires. Let's also imagine that the $\textbf{red}$ wire is connected to a power source and the $\textbf{blue}$ wire is connected to a lightbulb, and the blue wire amplifies the current from the power source such that it is enough to power the light bulb. To turn on the lightbulb, we need to connect $\textbf{red} \to \textbf{green} \to \textbf{blue}$. The time order in which we connect the three wires does not matter: we can connect the wires in the $(\textbf{red} \to \textbf{green}) \to \textbf{blue}$ order or in the $\textbf{red} \to (\textbf{green} \to \textbf{blue})$ order and either way we get the same result (the lightbulb turns on). However, the spatial order in which we connect the wires *does* matter: connecting $\textbf{red} \to \textbf{blue} \to \textbf{green}$, does not work. Hence, the operation is associative (temporal order does not matter) but not commutative (spatial order does matter).      
+
+If $M$ is a preorder, another restriction we may want to impose is that the monoidal product is strictly increasing:
+
+4. $m_1 \leq m_1 \otimes m_2$ and $m_2 \leq m_1 \otimes m_2$ for all $m_1, m_2 \in M$ (monotonicity)
+
+This means that when we combine two things, we get back something that's at least as big as the greater of the two things. Summation of natural numbers $(\mathbb{N}, 0, +)$ again works, but, for example, summation of integers $(\mathbb{Z}, 0, +)$ or multiplication of reals $(\mathbb{R}, 1, \times)$ does not. 
+
+# Fluent interactive graphics
+
+With these ideas in place, we can look at the process of (interactive) data visualization in a new light.
+
+## Data and partitions
+
+As before, we start with the data $D$. We know that we will want to summarize the datapoints $d \in D$ via some summarizing function $\alpha$, before drawing the result as one or more geometric objects. How should this summarizing step work?
+
+First, since we will often be drawing multiple objects, we need to think about splitting the data into multiple subsets. This is where it may be useful to frame the process as forming a partition on $D$, such that we end up with a set of non-empty parts $p \in P$, with each datapoint $d \in D$ belonging to exactly one $p \in P$. There are two consequences to this. First, every datapoint $d$ must end up in *some* part $p$. This seems entirely reasonable - we want our visualization to be an accurate and complete representation of the data, and as such we cannot simply leave information out arbitrarily. This may become more complicated if the data set has missing or incomplete values [for some ideas, see e.g. @tierney2018], or if it is too large to store in memory, but in the context of intact, reasonably-sized data sets, there does not seem to be any reason to throw data away. Second, *no* datapoint $d$ can end up in *more than one* part $p$. This is a bit more subtle. We could, for example, receive the two arrays $\textbf{employees}$ and $\textbf{managers}$ as our data $D$, with every manager in $\textbf{managers}$ also being included in $\textbf{employees}$ ($\textbf{managers} \cap \textbf{employees} \neq \varnothing$, since every manager is also an employee). We could then, for example, choose the arrays as our parts $p \in P$, such that $p_1 = \textbf{employees}$ and $p_2 = \textbf{managers}$, count up the number of people in each array, and draw these as bars in a barplot. However, this kind of visualization is problematic in several ways. First, the representation of the data (two non-disjoint arrays) itself already violates the principle of tidy data [@wickham2014] and/or the third normal form [@codd1990]: it unnecessarily duplicates information, and would be better represented as e.g. a single table with $\textbf{employee}$ and $\textbf{role}$ columns. Further, whatever query we may have about the data may also be better answered by a plot that uses the tidy representation. If we were interested, for example, in how many more employees there are relative to the managers, we may use the table with the two columns, partition on the $\textbf{role}$ column, and draw bars showing the counts for managers and non-manager employees. If we were instead interested in what proportion of employees the managers make up, we could use the same partitioning but stack the counts of managers and non-manager employees into a single bar. Overall, it seems that the isomorphism $\textbf{geometric objects} \cong \textbf{disjoint parts}$ is desirable.
+
+We may form the partitions in many different ways, some of which were already mentioned in previous sections. We may use some structure already present in the data such as rows, columns, or cells; we may partition on the levels of some categorical variable or "factor"; or we may transform some continuous variable into a categorical one, for example by binning. Either way, the important point is that we end up with some way of allocating the datapoints into several disjoint parts. 
+
+## Partition hierarchy
+
+Often, just a single partition of the data will not be enough. Instead, it may be useful or indeed necessary to form a (nested) hierarchy of partitions. The reason for this may be best explained with an example. Let's imagine a linked histogram which supports linked brushing as well as interactive manipulation of binwidth and anchor. The key insight here is that, whenever we brush, some graphical attributes of the plot, such as the upper y-axis limit and borders of the histogram bins (plotted on the x-axis), do not change; only the heights of the stacked sub-bars do. However, whenever we change binwidth or anchor, all of these attributes - the upper y-axis limit, the bin borders, and the heights of sub-bars - may change.
+
+We can model this dependency between summaries as a hierarchy of nested partitions. Specifically, we can represent the histogram via two partition levels: level 1) partitioning the data by the $\textbf{bin}$ variable/factor (which depends on the binwidth and anchor parameters), and level 2) partitioning the data by the $\textbf{bin} \times \textbf{group}$ intersection (where $\textbf{group}$ is the auxiliary variable that gets updated via brushing). The advantage of this approach is that any summaries that correspond to one partition level only need to be updated whenever that level or any higher (coarser) level changes, but not when any of the lower (finer) levels change. For example, the upper y-axis limit and the x-axis boundaries of the bins depend on level 1 partition (the $\textbf{bin}$ variable) only: as such, we only need to update them when binwidth or anchor change, but not when brushing takes place. Conversely, the counts within sub-bars depend on level 2 partition (the $\textbf{bin} \times \textbf{group}$ intersection variable). In this way, the partitions and the corresponding summaries computed on them form a directed acyclic graph (DAG), see Figure \ref{fig:dag}. 
+
+```{r dag}
+#| echo: false
+#| fig-cap: "Parition hierarchy in a stacked histogram represented as DAG. Partitioning variables/factors are shown as rectangles. This dependency structure implies that, when group changes, only sub-bar heights need to be recomputed. However, when either the anchor or binwidth change, both the upper y-axis limit and bar borders, and the sub-bar heights, need to be recomputed."
+
+library(grid)
+
+draw_node <- function(x, y, r, label, draw_label = TRUE) {
+  grid.circle(x, y, r, name = label)
+  if (draw_label) grid.text(label, x, y, gp = gpar(cex = 0.75))
+}
+
+draw_rectnode <- function(x, y, w, h, label, draw_label = TRUE) {
+  grid.rect(x, y, w, h, name = label)
+  if (draw_label) grid.text(label, x, y, gp = gpar(cex = 0.75))
+}
+
+draw_edge <- function(node1, node2, theta1, theta2, arrow) {
+  grid.segments(grobX(node1, theta1), grobY(node1, theta1),
+                grobX(node2, theta2), grobY(node2, theta2),
+                arrow = arrow)
+}
+
+grid.newpage()
+arrow1 <- arrow(length = unit(0.1, "inches"))
+draw_node(6/14, 5/6, 0.1, "Data")
+draw_node(8/14, 3/4, 0.075, "Binwidth")
+draw_node(4/14, 3/4, 0.075, "Anchor")
+draw_rectnode(6/14, 1/2, 0.15, 0.1, "Bin")
+
+draw_edge("Data", "Bin", 270, 90, arrow1)
+draw_edge("Binwidth", "Bin", 220, 60, arrow1)
+draw_edge("Anchor", "Bin", 320, 120, arrow1)
+
+grid.text("Level 1 Partition: \nUpper y-axis limit \nBar borders (x-axis)", 
+          4.75/14, 1/2, just = "right", gp = gpar(cex = 0.65))
+grid.text("Level 2 Partition: \nSub-bar heights (y-axis)", 
+          4.75/14, 1/4, just = "right", gp = gpar(cex = 0.65))
+
+draw_node(8/14, 1/2, 0.075, "Group")
+draw_rectnode(6/14, 1/4, 0.15, 0.1, "Bin x Group")
+
+draw_edge("Bin", "Bin x Group", 270, 90, arrow1)
+draw_edge("Group", "Bin x Group", 220, 60, arrow1)
+
+```
+
+The same hierarchy of partitions, with one small modification, will work equally well for a spineplot. The modification is that, since we are now also stacking the counts in whole bins (along the x-axis), we might benefit from having one more partition level: the coarsest possible level 0 partition which consists of the entire data set. In other words, we can think of this partition as a constant function which maps every datapoint to the same single part. We can then, same as in level 1 and level 2 partitions, count the number of cases corresponding to the one part, which in this case is just $n$ (the size of the data set), and use this as our upper x-axis limit. Now, one might wonder why bother with the summarizing the partition at all - why not just use $n$, if our data provides this information? Without jumping ahead too much, the reason is that we may want to use a different summarizing function, and so we cannot assume that the data set will provide every possible summary that can be computed across the datapoints. Besides, since the level 0 partition can never change (every datapoint will always belong to the one part that is the whole data set), we only need to compute the level 0 summaries once, and so this operation should be fairly cheap. In fact, it may be reasonable to always include the whole-data level 0 partition by default, since it will not affect the time which it takes to render interactions, only the time it takes to do the first render of the visualization.
+
+The hierarchical nature of the partitions may also become useful when implementing interactions. For example, let's say we want to implement linked brushing. To do this, we need a way of checking which cases of the data have been selected via the brush, and we do this by querying the bounds of the geometric objects. For example, in a histogram, for every histogram bar, we need the check whether any if its four corners falls within the brushing region. Importantly, we want to query the "whole" bars (defined by the $\textbf{bin}$ variable), and not the sub-bars ($\textbf{bin} \times \textbf{group}$). There are two reasons for this. First, this is the conventional way of implementing linked brushing with bars. Of the packages listed in introduction, to the author's knowledge, all implement brushing in this way. In plain words, when users brush a linked barplot or histogram, they do not expect to select individual sub-bars that make up the stacked whole bars. Even the systems which implement selection operators such as `AND` and `OR` [e.g. *Mondrian*, @theus2002], typically operate on the level of whole objects. Second, and more importantly, querying whole bars is less work. If the $\textbf{bin}$ variable has $k_1$ unique levels and the $\textbf{bin} \times \textbf{group}$ has $k_2$ unique levels, then $k_1 \leq k_2$ always ($k_1 = k_2$ only when there is only a single group present in $\textbf{group}$). Either way, to query whole bars, we can use the summaries/coordinates corresponding to the level 1 partition and ignore the summaries on level 2 partition entirely.
+
+The picture that emerges is that a convenient representation of interactive visualizations may be the following hierarchy of $m \geq 3$ partition levels: level 0, representing the whole data set, some intermediate levels 1 through to $m - 2$, representing partitioning of the data into smaller and smaller objects (with level $m - 2$ representing the smallest "whole" objects), and finally level $m - 1$, representing the partitioning induced by the linked brushing variable $\textbf{group}$. For histogram and spineplot, $m = 3$, and so $m - 1 = 2$ and the finest level is level 2 and there is just one intermediate object level, namely level 1. However, for other types of plots, e.g. mosaic plot, we may want several object partitions.    
 
 
 # References
