@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-Interactive data visualization (IDV) has seen a rapid growth in popularity over the last few decades. From the humble roots of early, highly specialized systems, such as those of @fowlkes1969 and @kruskal1964, there has been a steady progress towards more and more general and feature-rich frameworks. The first general-purpose system was *PRIM-9* [@fisherkeller1974], which allowed for exploration of high-dimensional data in scatterplots using projection, rotation, subsetting and masking. Later systems, such as *MacSpin* [@donoho1988], *Lisp-Stat* and *XLisp-Stat* [@tierney1989; @tierney2004], and *XGobi* [@swayne1998] provided rich features such as interactive scaling, rotation, linked selection (or "brushing"), and interactive plotting of smooth fits in scatterplots, as well as interactive parallel coordinate plots and grand tours. They were later followed by other systems such as *Mondrian* [@theus2002], *GGobi* [@swayne2003], *iPlots* [@urbanek2003], and *cranvas* [@xie2014]. Alongside these later developments, which have largely come from the field of statistics, the rise of Web technologies and interactive web apps has spawned its own family of IDV systems. Among these, the earlier systems such as *Prefuse* [@heer2005] and *Flare* [@flare2020] relied on external plugins (Java and Adobe Flash Player, respectively) while later systems became truly Web-native by embracing JavaScript. Among them, *D3*.js [@bostock2011] has grown to great popularity, alongside its high-level interface *plotly*.js,  [@plotly2022], and so have other frameworks such as *Vega* [@satyanarayan2015], *Vega-lite* [@satyanarayan2016], *Altair* [@vanderplas2018], and *Highcharts* [@highcharts2023].  
+Interactive data visualization (IDV) has seen a rapid growth in popularity over the last few decades. From the humble roots of early, highly specialized systems, such as those of @fowlkes1969 and @kruskal1964, there has been a steady progress towards more and more general and feature-rich frameworks. The first general-purpose system was *PRIM-9* [@fisherkeller1974], which allowed for exploration of high-dimensional data in scatterplots using projection, rotation, subsetting and masking. Later systems, such as *MacSpin* [@donoho1988], *Lisp-Stat* and *XLisp-Stat* [@tierney1989; @tierney2004], and *XGobi* [@swayne1998] provided rich features such as interactive scaling, rotation, linked selection (or "brushing"), and interactive plotting of smooth fits in scatterplots, as well as interactive parallel coordinate plots and grand tours. They were later followed by other systems such as *Mondrian* [@theus2002], *GGobi* [@swayne2003], *iPlots* [@urbanek2003], and *cranvas* [@xie2014]. Alongside these later developments, which have largely come from the field of statistics, the rise of Web technologies and interactive web apps has spawned its own family of IDV systems. Among these, the earlier systems such as *Prefuse* [@heer2005] and *Flare* [@flare2020] relied on external plugins (Java and Adobe Flash Player, respectively) while later systems became truly Web-native by embracing JavaScript. Among them, *D3*.js [@bostock2011] has grown to great popularity, alongside its high-level interface *plotly*.js,  [@plotly2022], and so have other frameworks such as *Vega* [@satyanarayan2015], *Vega-lite* [@satyanarayan2016], *Altair* [@vanderPlas2018], and *Highcharts* [@highcharts2023].  
 
 Interactive figures now frequently appear in online news articles, business dashboards, and scientific publications and blogs. Yet, despite the wide proliferation of IDV systems and various taxonomies of interactive features [see e.g. @yi2007], there still looms a large unresolved problem in the production of IDVs. That is, interactive data visualizations, like all visualizations, require us to process data into statistical summaries that can then be translated into graphical attributes and drawn. However, in contrast to static visualizations, where all data processing needs to occur only once, IDVs need to respond to user input reactively, with relevant quantities often having to be recomputed many times a second [@wickham2009]. Further, different types of interactions come with different levels of computational complexity [see e.g. @leman2013; @pike2009]. Thus, the way we process the data and implement the interactions matters a lot. Some interactions can be implemented by manipulating graphical attributes of the visualization only. For example, to implement panning or zooming, all we need to do is compute the axis limits once. After that, we can "forget" the original data and merely update the four scalar values (= lower and upper x-axis and y-axis limits) whenever the user performs the requisite actions. However, this is not the case for other, more complex types of interactions. For example, if we want to implement an interactive histogram in which the user can change the binwidth and anchor, we need a way to recompute the number of cases in each bin after either of the two parameters is updated. This means that we have to refer to the original data. Similarly, to implement linked highlighting/brushing, whereby the user can highlight some cases in the data across multiple plots by either clicking or click-and-drag selecting the corresponding geometric objects in one plot, we need to keep track of which cases belong to which object. 
 
@@ -76,11 +76,11 @@ Or, equivalently:
 
 The above should be fairly non-controversial description of how a data visualization is produced, and applies equally well to static as well as interactive visualizations. There are a few caveats. Firstly, while not always the case, *order* can be important. For example, while we can draw the bars in a barplot in no particular order, lines in a lineplot need to be drawn by connecting points in specific order, otherwise we can end up with completely different-looking visualization. This means that either $S$, $G$, or their components, may need to be ordered. Secondly, *hierarchy* can also be important and the collections may form tree/graph-like structure. This is particularly relevant when stacking. For example, when drawing a stacked barplot, we need to stack the graphical coordinates representing the sub-bars on top of each other, such that each sub-bar is stacked within the appropriate parent-bar and in the correct order (e.g. such that sub-bars belonging to group 2 always go on top group 1 sub-bars). If it is the case that order matters for either $\alpha$ or $\beta$, then we cannot call them true functions either, since each of the elements in their domain needs to be aware of the other elements. That is, when stacking bars in a stacked barplot, we need to "remember" what bars we have stacked before. 
 
-# The problem of statistical summaries
+# The problem of statistical summaries {#problem}
 
 Circling back to the illusory rectangle in a barplot, we can now talk about interacting with the summarizing function $\alpha$. In a typical barplot, $\alpha$ consists of the simple act of "counting" how many times each of the $k$ unique levels of the categorical variable appears. We could substitute a different statistical for $\alpha$, e.g. taking the sum or mean of the values of some other (continuous) variable in the data. But herein lies a problem.    
 
-While some forms of the summarizing function $\alpha$ may produce perfectly valid static visualizations, when it comes to interactive visualization, not every statistical summary "works" equally well. Instead, some interactive features impose additional constraints and so some summaries may end up producing better or more coherent IDVs than others. Let's illustrate the problem with a simple case study.
+While some summarizing functions $\alpha$ may produce perfectly valid static visualizations, when it comes to interactive visualizations, not every statistical summary "works" equally well. That is, introducing interactive features may impose additional constraints on what summaries will make up a coherent visualization. Let's illustrate the problem with a simple case study.
 
 ## Case study: counts and means
 
@@ -174,7 +174,7 @@ axis_fun2()
 
 ```
 
-## Empty selections
+## Empty selections {#empty}
 
 First, as is shown in Figure \@ref(fig:empty), how do we represent empty selections? In the case of counts, we have a meaningful default value - zero - as in "the number of cases in an empty selection is zero". In other words, the absence of a bar in a barplot unambiguously indicates that the count for the corresponding level of the stratifying variables is zero.
 
@@ -265,13 +265,13 @@ axis_fun2()
 
 ```
 
-## Part vs. the whole
+## Part vs. the whole {#lessthan}
 
 Second, as shown in Figure \@ref(fig:bigger), how does the summary on the selection relate to the summary on the whole? In the case of the barplot of counts, the height of the sub-bar is always less than or equal ($\leq$) to the height of the whole bar (because so is the count). Thus, we can always draw the sub-bar over the whole bar, and the whole bar act as a stable visual reference: the outline of multiple sub-bars stacked on top of each other will always remain the same no matter which cases of the data are selected. In fact, we can either draw the whole bar (as shown in grey in Figure \@ref(fig:bigger)) and draw the selected sub-bar (red) over it, both starting from the y-axis origin (0), or we can draw a red sub-bar and the "leftover" grey-sub bar stacked on top, starting from the top y-coordinate of the selection bar and with $\textbf{height} = (\text{count of the whole} - \text{count of the selection})$. The result will be visually identical.
 
 Means do not share this property. Specifically, the mean of a subset can be greater than the mean of the superset, and so the "sub-bars" representing the selection may end up taller then the bar representing all cases within the level of the stratifying variable. As a result, if we draw the sub-bars on top of the whole bar, the whole bar may be completely obscured by the sub-bars (as shown in Figure \@ref(fig:bigger)). We could draw the selection sub-bars as semitransparent, or draw the the bars side-by-side instead of on top of each other (i.e. technique known as "dodging"), however, the question then remains how to display the non-selected (grey) cases - do we draw the "whole" bar that remains the same height throughout interaction, or the "leftover" bar whose height changes with the selection? Also, if we choose to draw the bars side-by-side, will the whole bar be initially wide and shrink in response to selection to accommodate the selection bars, or will it be narrow from the initial render? Finally, if the user brushes the side-by-side bars, will they be able to select individual bars or will brushing one select all of them? 
 
-## Combining parts
+## Combining parts {#associativity}
 
 Finally, as displayed in Figure \@ref(fig:stacking), when multiple selections/groups are present, can we combine them in a meaningful way? Again, in the case of the barplot of counts, there is an idiomatic way of doing this: we can stack the counts across the groups and the corresponding bars on top of each other. The height of the resulting bar will then always be identical to the count of the whole (unselected) bar.
 
@@ -367,11 +367,64 @@ There are of course ways to display means such that linked brushing is possible.
 
 One might wonder if these problems are just a quirk of linked brushing. However, one runs into them elsewhere as well. For example, stacking means will not make sense in static plots either. Further, we will run into some of the same issues with any other interactive feature that deals with summary statistics computed on parts of the data. If, for example, on top of linked brushing, we wanted to implement a pop-up window that displays summary statistics within a given object as text, we would still have to contend with the problem of how to display empty selections. Here, there is perhaps a simple solution: we could display the mean of an empty selection as some special value, for example `NA`, `undefined`, or an empty string, `""`. However, by doing so, we have to step outside of the value type of summaries on non-empty selections (real number/`float`). While this may not be a problem in most types of statistical software we may use, it still does add some complexity to our code, since whatever functions rely on means (such as the display function) now have to be generic over `float` and `NA`/`underfined`/`""`. On the other hand, there is something natural about counts having the value for empty selections (zero) be of the same type as all other values (`int`).
 
-Are counts unique in being so well-behaved in this way? The short answer is "no". For example, sums or products (of values $\geq 1$) conform to all three properties listed above. In other words, in the context of linked brushing, a stacked barplot will behave equally well if it display sums (not surprising) or products (perhaps somewhat surprising?). In fact, there is whole a class of mathematical functions, or more precisely mathematical structures, that share these nice properties. To discuss these, let's first lay the groundwork with some relevant theory.   
+Are counts unique in being so well-behaved in this way? The short answer is "no". For example, sums or products (of values $\geq 1$) conform to all three properties listed above. In other words, in the context of linked brushing, a stacked barplot will behave equally well if it display sums (not surprising) or products (perhaps somewhat surprising?), see Figure \ref{fig:sumsproducts}. In fact, there is whole a class of mathematical functions, or more precisely mathematical structures, that share these nice properties. To discuss these, let's first lay the groundwork with some relevant theory.   
 
-# Few Relevant Bits of Category Theory
+```{r sumsproducts}
+#| echo: false
+#| fig-height: 3
+#| fig-cap: "Sums and products work equally well as counts when it comes to displaying empty selections, providing a stable visual reference, and being able to be combined together. Note the different y-axis limits. a) The underlying data. b) Barplot of products. c) Barplot of sums"
 
-The treatment below follows mainly from parts of @fong2019, @lawvere2009, and @milewski2018. Category theory is a very rich and deep subject, and this treatment only goes over a few basic introductory concepts. Further, these concepts are common to other parts of mathematics as well, such as abstract algebra or group theory, and so it could be argued that the term "category theory" is out of place. Nonetheless, I include the term because this is how I discovered the concepts, and I think it provides a useful signpost for anyone who might want to dive deeper. I hope that any mathematician who might read this can tolerate the pedestrian nature on display here. But that is also somewhat the point - even a few basic concepts might provide great value when thinking about (interactive) visualizations.   
+group <- rep(c("A", "B"), each = 3)
+props <- c(NA, 1.5, 1.1, 1.4, 1.1, 1.2)
+cols <- c("grey80", "steelblue", "indianred")
+
+pairwise_avg <- function(x) {
+  (x[-1] + x[-length(x)]) / 2
+}
+
+par(mfrow = c(1, 3), mar = c(3, 4, 2, 0.5))
+
+plot(0:1, 0:1, type = "n", axes = FALSE, xlab = "", ylab = "")
+title(main = "a.", adj = 0, line = 0.5)
+
+text(0.25, 1:3/4, labels = c("Missing", props[2:3]))
+text(0.75, 1:3/4, labels = props[4:6])
+text(c(0.25, 0.75), 0.95, labels = c("A", "B"), cex = 1.5)
+
+rect(0.25 - 0.25, 1:3/4 - 0.125, 0.25 + 0.25, 1:3/4 + 0.125)
+rect(0.75 - 0.25, 1:3/4 - 0.125, 0.75 + 0.25, 1:3/4 + 0.125)
+
+summary_barplot <- function(summary_fn, neutral, ymin, ymax, op_symbol) {
+  props[is.na(props)] <- neutral
+  dt <- tapply(props, group, summary_fn)
+  
+  text_y_a <- pairwise_avg(c(neutral, dt$A))[-1]
+  text_y_b <- pairwise_avg(c(neutral, dt$B))
+  
+  plot(seq(0.1, 0.9, length = 10), seq(ymin, ymax, length = 10), type = "n",
+       axes = FALSE, xlab = "", ylab = "")
+  rect(0.15, c(neutral, dt$A[-length(dt$A)]), 0.45, dt$A, col = cols, border = NA)
+  rect(0.55, c(neutral, dt$B[-length(dt$B)]), 0.85, dt$B, col = cols, border = NA)
+  text(0.3, text_y_a, labels = paste0(op_symbol, props[2:3]), 
+       col = c("white", "white"))
+  text(0.7, text_y_b, labels = paste0(op_symbol, props[4:6]), 
+       col = c("grey40", "white", "white"))
+  axis(1, at = c(0.3, 0.7), labels = c("A", "B"), tick = FALSE)
+  axis(2, tick = FALSE, las = 1)
+  box(bty = "L")
+}
+
+summary_barplot(cumprod, 1, 1, 2, "x ")
+title(main = "b.", adj = 0, line = 0.5)
+
+summary_barplot(cumsum, 0, 0, 4, "+ ")
+title(main = "c.", adj = 0, line = 0.5)
+
+```
+
+# Few relevant bits of applied category theory
+
+The short treatment below follows mainly from parts of @fong2019, @lawvere2009, @baez2023, and @milewski2018. Category theory is a very rich and deep subject, and this treatment only goes over a few very basic concepts. Further, these concepts appear in other areas mathematics as well, including abstract algebra and group theory, and so it could be argued that the term "category theory" is out of place here. Nonetheless, I titled this section in this way because that is how I discovered the concepts, and I think it may provide a useful signpost for anyone who would want to dive deeper. I hope that any mathematician who might read this can tolerate the pedestrian nature on display here. But that is also somewhat the point - even a few basic concepts might be valuable when thinking about (interactive) visualizations.   
 
 ## Functions
 
@@ -379,7 +432,7 @@ A function is a mapping between two sets. More specifically, let $S$ be the set 
 
 If every target in the function's codomain can be reached via the function, that is, if for a function $f$ and for all $t \in T$ there exists a $s \in S$ such that $f(s) = t$, then we call the function a *surjective* or *onto* function, see Figure \ref{fig:functions}a. If each source leads to a unique target, i.e. for $s_1, s_2 \in S$, if $f(s_1) = t$ and $f(s_2) = t$, then $s_1 = s_2$, then it is an *injective* or *one-to-one* function, see Figure \ref{fig:functions}b. Also, for any given subset of targets, we can ask about the subset of sources that could have produced them, a *pre-image*. That is, for $T_i \subseteq T$ we can define $f^{-1}(T_i) = \{ s \in S \lvert f(s) \in T_i \}$. 
 
-If the domain of one function matches the codomain of another, the functions can be composed to form a new function. Specifically, if we have two functions $f: X \to Y$ and $g: Y \to Z$, we can form a new function $h = g(f(x)) = g \circ f$ (read "$g$ after $f$") such that $h: X \to Z$.
+Finally, a very useful property of functions is that they can be composed. That is, if the domain of one function matches the codomain of another, the functions can be composed to form a new function. Specifically, if we have two functions $f: X \to Y$ and $g: Y \to Z$, we can form a new function $h = g(f(x)) = g \circ f$ (read "$g$ after $f$") such that $h: X \to Z$.
 
 ```{r functions}
 #| echo: false
@@ -451,7 +504,7 @@ We can further constrain preorders by imposing additional properties, such as:
 
 If a preorder conforms to 3., we speak of a partially ordered set or *poset*. If it conforms to both 3. and 4., then it is a *total order*. 
 
-## Monoids
+## Monoids {#monoids}
 
 A monoid is a tuple $(M, e, \otimes)$ consisting of:
 
@@ -464,26 +517,29 @@ Such that:
 1. $m \otimes e = e \otimes m = m$ for all $m \in M$ (unitality)
 2. $m_1 \otimes (m_2 \otimes m_3) = (m_1 \otimes m_2) \otimes m_3 = m_1 \otimes m_2 \otimes m_3$ for all $m_1, m_2, m_3 \in M$ (associativity)
 
-In simple terms, monoids encapsulate the idea that *the whole is exactly the "sum" of its parts* (where "sum" can be replaced by any operation that conforms to the rules). Specifically, we have some elements in $M$ and a way to combine them $\otimes$, such that when we combine the same elements we always get the same result, no matter where we put the brackets (i.e. something like "the order does not matter", although that is not precisely right, more on that later). Finally, we have some neutral element that when combined with some element $m$ yields back the same element $m$.  
+In simple terms, monoids encapsulate the idea that *the whole is exactly the "sum" of its parts* (where "sum" can be replaced by any operation that conforms to the rules). Specifically, we have some elements in $M$ and a way to combine them $\otimes$, such that when we combine the same elements we always get the same result, no matter where we put the brackets. Finally, we have some neutral element that when combined with some element $m$ yields back the same element $m$.  
 
 For example, take summation on natural numbers, $(\mathbb{N}, 0, +)$:
 
 $$1 + 0 = 0 + 1 = 1 \qquad \text{(unitality)}$$
 $$1 + (2 + 3) = (1 + 2) + 3 = 1 + 2 + 3 \qquad \text{(associativity)}$$
 
-Likewise, products of real numbers $(\mathbb{R}, 1, \times)$ are also a monoid, and so is multiplication of $n \times n$ square matrices $(\mathbf{M}_{n \in \mathbb{Z}}, \mathbf{I}, \cdot)$, where $\mathbf{I}$ is the identity matrix and $\cdot$ stands for an infix operator that is usually omitted. As a counterexample, exponentiation does not meet the definition of a monoid, since it is not associative: $x^{(y^z)} \neq (x^y)^z$. 
+Other examples of monoids include products of real numbers $(\mathbb{R}, 1, \times)$, the min and max operators $(\mathbb{R}, \infty, \min)$ and $(\mathbb{R}, -\infty, \max)$, and multiplication of $n \times n$ square matrices $(\mathbf{M}_{n \in \mathbb{Z}}, \mathbf{I}, \cdot)$, where $\mathbf{I}$ is the identity matrix and $\cdot$ stands for an infix operator that is usually omitted. As a counterexample, exponentiation does not meet the definition of a monoid, since it is not associative: $x^{(y^z)} \neq (x^y)^z$.
 
-We may want to impose further restrictions on monoids, for example:
+However, monoids do not need to concern numerical quantities only. For example, string concatenation (with empty string `""` as the monoidal unit) is also a monoid:
+
+$$\texttt{"hello"} + \texttt{""} = \texttt{""} + \texttt{"hello"} = \texttt{"hello"}$$
+$$(\texttt{"quick"} + \texttt{"brown"}) + \texttt{"fox"} = \texttt{"quick"} + (\texttt{"brown"} + \texttt{"fox"}) = \texttt{"quick brown fox"}$$
+Likewise, with the set of booleans $\mathbb{B}$, the logical $\mathbf{AND}$ and $\mathbf{OR}$ operators also form a monoid. 
+
+We can impose further restrictions on monoids, for example:
 
 3. $m_1 \otimes m_2 = m_2 \otimes m_1$ for all $m_1, m_2 \in M$ (commutativity)
+4. If $m_1 \leq m_3$ and $m_2 \leq m_4$ then $m_1 \otimes m_2 \leq m_3 \otimes m_4$ for all $m_1, m_2, m_3, m_4 \in M$ (monotonicity)
 
-Both commutativity and associativity can be viewed as "order does not matter" rules, however, they are fundamentally different. Let's imagine our set of objects consists of three wires of different colours $\{ \textbf{red}, \textbf{green}, \textbf{blue} \}$ and the monoidal product consists of connecting wires. Let's also imagine that the $\textbf{red}$ wire is connected to a power source and the $\textbf{blue}$ wire is connected to a lightbulb, and the blue wire amplifies the current from the power source such that it is enough to power the light bulb. To turn on the lightbulb, we need to connect $\textbf{red} \to \textbf{green} \to \textbf{blue}$. The time order in which we connect the three wires does not matter: we can connect the wires in the $(\textbf{red} \to \textbf{green}) \to \textbf{blue}$ order or in the $\textbf{red} \to (\textbf{green} \to \textbf{blue})$ order and either way we get the same result (the lightbulb turns on). However, the spatial order in which we connect the wires *does* matter: connecting $\textbf{red} \to \textbf{blue} \to \textbf{green}$, does not work. Hence, the operation is associative (temporal order does not matter) but not commutative (spatial order does matter).      
+Property 3. means that the order in which we combine terms does not matter, and property 4. means that combining two smaller terms cannot get us something bigger than combining two greater terms. Summation of natural numbers $(\mathbb{N}, 0, +)$ is both commutative and monotonic, multiplication of reals $(\mathbb{R}, 1, \times)$ is commutative but not monotonic, and the multiplication of matrices with real/integer entries $(\mathbf{M}_{n \in \mathbb{Z}}, \mathbf{I}, \cdot)$ is neither monotonic nor commutative.
 
-If $M$ is a preorder, another restriction we may want to impose is that the monoidal product is strictly increasing:
-
-4. $m_1 \leq m_1 \otimes m_2$ and $m_2 \leq m_1 \otimes m_2$ for all $m_1, m_2 \in M$ (monotonicity)
-
-This means that when we combine two things, we get back something that's at least as big as the greater of the two things. Summation of natural numbers $(\mathbb{N}, 0, +)$ again works, but, for example, summation of integers $(\mathbb{Z}, 0, +)$ or multiplication of reals $(\mathbb{R}, 1, \times)$ does not. 
+One thing we left out of the definition above is that, to be able to determine whether a monoid is monotonic, we need a way to compare two elements, i.e. we need the $\leq$ operator. This means that the set $M$ in the monoid needs to be a preorder such that we can claim monotonicity (or lack thereof). A monoid that is both commutative and monotonic is called a commutative monoidal preorder.
 
 # Fluent interactive graphics
 
@@ -499,12 +555,15 @@ We may form the partitions in many different ways, some of which were already me
 
 ## Partition hierarchy
 
-Often, just a single partition of the data will not be enough. Instead, it may be useful or indeed necessary to form a (nested) hierarchy of partitions. The reason for this may be best explained with an example. Let's imagine a linked histogram which supports linked brushing as well as interactive manipulation of binwidth and anchor. The key insight here is that, whenever we brush, some graphical attributes of the plot, such as the upper y-axis limit and borders of the histogram bins (plotted on the x-axis), do not change; only the heights of the stacked sub-bars do. However, whenever we change binwidth or anchor, all of these attributes - the upper y-axis limit, the bin borders, and the heights of sub-bars - may change.
+Often, just a single partition of the data will not be enough. Instead, it may be useful or indeed necessary to form a (nested) hierarchy of partitions. The reason for this may be best explained with an example. 
 
-We can model this dependency between summaries as a hierarchy of nested partitions. Specifically, we can represent the histogram via two partition levels: level 1) partitioning the data by the $\textbf{bin}$ variable/factor (which depends on the binwidth and anchor parameters), and level 2) partitioning the data by the $\textbf{bin} \times \textbf{group}$ intersection (where $\textbf{group}$ is the auxiliary variable that gets updated via brushing). The advantage of this approach is that any summaries that correspond to one partition level only need to be updated whenever that level or any higher (coarser) level changes, but not when any of the lower (finer) levels change. For example, the upper y-axis limit and the x-axis boundaries of the bins depend on level 1 partition (the $\textbf{bin}$ variable) only: as such, we only need to update them when binwidth or anchor change, but not when brushing takes place. Conversely, the counts within sub-bars depend on level 2 partition (the $\textbf{bin} \times \textbf{group}$ intersection variable). In this way, the partitions and the corresponding summaries computed on them form a directed acyclic graph (DAG), see Figure \ref{fig:dag}. 
+Let's imagine a linked histogram which supports linked brushing as well as interactive manipulation of binwidth and anchor. The key insight here is that, whenever we brush, some graphical attributes of the plot, such as the upper y-axis limit and borders of the histogram bins (plotted on the x-axis), do not change; only the heights of the stacked sub-bars do. However, whenever we change binwidth or anchor, all of these attributes - the upper y-axis limit, the bin borders, and the heights of sub-bars - may change.
+
+We can model this dependency between summaries as a hierarchy of nested partitions. Specifically, we can represent the histogram via two partition levels: level 1) partitioning the data by the $\textbf{bin}$ variable/factor (which depends on the binwidth and anchor parameters), and level 2) partitioning the data by the $\textbf{bin} \times \textbf{group}$ intersection (where $\textbf{group}$ is the auxiliary variable that gets updated via brushing). The advantage of this approach is that any summaries that correspond to one partition level only need to be updated whenever that level or any higher/coarser level changes, but not when any of the lower/finer levels change. For example, the upper y-axis limit and the x-axis boundaries of the bins depend on level 1 partition (the $\textbf{bin}$ variable) only: as such, we only need to update them when binwidth or anchor change, but not when brushing takes place. Conversely, the counts within sub-bars depend on level 2 partition (the $\textbf{bin} \times \textbf{group}$ intersection variable). In this way, the partitions and the corresponding summaries computed on them form a directed acyclic graph (DAG), see Figure \ref{fig:dag}. 
 
 ```{r dag}
 #| echo: false
+#| fig-height: 4
 #| fig-cap: "Parition hierarchy in a stacked histogram represented as DAG. Partitioning variables/factors are shown as rectangles. This dependency structure implies that, when group changes, only sub-bar heights need to be recomputed. However, when either the anchor or binwidth change, both the upper y-axis limit and bar borders, and the sub-bar heights, need to be recomputed."
 
 library(grid)
@@ -549,11 +608,33 @@ draw_edge("Group", "Bin x Group", 220, 60, arrow1)
 
 ```
 
-The same hierarchy of partitions, with one small modification, will work equally well for a spineplot. The modification is that, since we are now also stacking the counts in whole bins (along the x-axis), we might benefit from having one more partition level: the coarsest possible level 0 partition which consists of the entire data set. In other words, we can think of this partition as a constant function which maps every datapoint to the same single part. We can then, same as in level 1 and level 2 partitions, count the number of cases corresponding to the one part, which in this case is just $n$ (the size of the data set), and use this as our upper x-axis limit. Now, one might wonder why bother with the summarizing the partition at all - why not just use $n$, if our data provides this information? Without jumping ahead too much, the reason is that we may want to use a different summarizing function, and so we cannot assume that the data set will provide every possible summary that can be computed across the datapoints. Besides, since the level 0 partition can never change (every datapoint will always belong to the one part that is the whole data set), we only need to compute the level 0 summaries once, and so this operation should be fairly cheap. In fact, it may be reasonable to always include the whole-data level 0 partition by default, since it will not affect the time which it takes to render interactions, only the time it takes to do the first render of the visualization.
+The same hierarchy of partitions, with one small modification, will work equally well for a spineplot. The modification is that, since we are now also stacking the counts in whole bins (along the x-axis), we might benefit from having one more partition level: the coarsest possible level 0 partition, which consists of the entire data set. In other words, we can think of this partition as a constant function which maps every datapoint to the same single part. We can then, same as in level 1 and level 2 partitions, count the number of cases corresponding to the one part, which in this case is just $n$ (the size of the data set), and use this as our upper x-axis limit, since this will give the same result as stacking counts across all histogram bins. Now, one might wonder why bother with the summarizing the partition at all - why not just use $n$, if our data provides this information? Without jumping ahead too much, the reason is that we may want to use a different summarizing function, and so we cannot assume that the data set object/class will provide every possible summary that can be computed across all datapoints. Besides, since the level 0 partition can never change (every datapoint will always belong to the one part that is the whole data set), we only need to compute the level 0 summaries once, and so this operation should be fairly cheap. In fact, it may be reasonable to always include the whole-data level 0 partition by default, since it will not affect the time which it takes to render interactions, only the time it takes to render the visualization the first time.
 
-The hierarchical nature of the partitions may also become useful when implementing interactions. For example, let's say we want to implement linked brushing. To do this, we need a way of checking which cases of the data have been selected via the brush, and we do this by querying the bounds of the geometric objects. For example, in a histogram, for every histogram bar, we need the check whether any if its four corners falls within the brushing region. Importantly, we want to query the "whole" bars (defined by the $\textbf{bin}$ variable), and not the sub-bars ($\textbf{bin} \times \textbf{group}$). There are two reasons for this. First, this is the conventional way of implementing linked brushing with bars. Of the packages listed in introduction, to the author's knowledge, all implement brushing in this way. In plain words, when users brush a linked barplot or histogram, they do not expect to select individual sub-bars that make up the stacked whole bars. Even the systems which implement selection operators such as `AND` and `OR` [e.g. *Mondrian*, @theus2002], typically operate on the level of whole objects. Second, and more importantly, querying whole bars is less work. If the $\textbf{bin}$ variable has $k_1$ unique levels and the $\textbf{bin} \times \textbf{group}$ has $k_2$ unique levels, then $k_1 \leq k_2$ always ($k_1 = k_2$ only when there is only a single group present in $\textbf{group}$). Either way, to query whole bars, we can use the summaries/coordinates corresponding to the level 1 partition and ignore the summaries on level 2 partition entirely.
+The hierarchical nature of the partitions may be useful not just when drawing/rendering but also when implementing interactions. For example, let's say we want to implement linked brushing. To do this, we need a way to check which cases of the data have been selected via the brush. We do this by querying the bounds of the geometric objects, for example by taking the four corners of each rectangle in a barplot/histogram and checking if any of them falls inside the brushing regions. Importantly, we want to query the "whole" objects (e.g. bars defined by the $\textbf{bin}$ variable), and not the object parts (e.g. sub-bars defined by $\textbf{bin} \times \textbf{group}$). There are two reasons for this. First, this is the conventional way of implementing linked brushing. Of the packages listed in introduction, to the author's knowledge, all implement brushing in this way. In plain words, when users brush a linked barplot or histogram, they do not expect to select individual sub-bars that make up the stacked whole bars. Even the systems which implement selection operators such as `AND` and `OR` [e.g. *Mondrian*, @theus2002], typically operate on the level of whole objects. Second, and more importantly, querying whole bars is less work. If the $\textbf{bin}$ variable has $k_1$ unique levels and the $\textbf{bin} \times \textbf{group}$ has $k_2$ unique levels, then $k_1 \leq k_2$ always ($k_1 = k_2$ only when there is only a single group present in $\textbf{group}$). Either way, to query whole objects, we can use the summaries/coordinates corresponding to higher level/coarser partitions and ignore lower level/finer partitions. For example, to implement brushing in an interactive histogram, we can query summaries on the level 1 partitions and and ignore the summaries on level 2 partition entirely.
 
 The picture that emerges is that a convenient representation of interactive visualizations may be the following hierarchy of $m \geq 3$ partition levels: level 0, representing the whole data set, some intermediate levels 1 through to $m - 2$, representing partitioning of the data into smaller and smaller objects (with level $m - 2$ representing the smallest "whole" objects), and finally level $m - 1$, representing the partitioning induced by the linked brushing variable $\textbf{group}$. For histogram and spineplot, $m = 3$, and so $m - 1 = 2$ and the finest level is level 2 and there is just one intermediate object level, namely level 1. However, for other types of plots, e.g. mosaic plot, we may want several object partitions.    
 
+Finally, since the parts within partitions form a tree, e.g. the whole-data part has bar parts as children, and each bar part has sub-bar parts as children, it may be tempting to think we could compute the parent parts by combining the children. However, this would defeat the purpose of the hierarchy since the lower level (finer) partitions change more frequently than higher level (coarser) ones. For example, the counts on sub-bars change often (as a result of brushing) and so it would not make sense to compute counts on the whole bars by adding them up - we would have to do this every time brushing occurs, even though the resulting statistic would be the same (e.g. the sum across sub-bars $5 + 3 + 10 = 18$ is the same as $7 + 7 + 4 = 18$). Instead, each partition level needs to run its own computation across the whole data set and update the summaries on its respective parts when and only when it needs to.
+
+## Computing summaries
+
+This whole time, we have been talking about computing summaries on partitions (e.g. counts within bins), but what should these summaries be and how should they be computed?
+
+First, the summaries may be either discrete or numeric. Most often, discrete summaries or "labels" will be computed as part of the process of creating the factor/partition variable, which needs to occur before the summarizing step. For example, in a barplot, we partition on some categorical variable and we use the levels of that variable as summaries that get encoded into graphical attributes, i.e. x-axis positions/labels. Thus, once we have a factor, we get the factor labels for free, and most of the time those are probably all the discrete summaries we need. But we could also envision a discrete summary that is not one of the factor labels, for example, we could find the name of the student with the highest GPA within levels of $\textbf{school}$ variable. 
+
+Either way, numerical summaries are usually what we think of when it comes to statistical summaries in plots. The classic examples include counts, sums, or means. However, as was discussed in Section \ref{problem}, some types of summaries such as means do not make for well-behaved interactive graphics. Provided that we want our interactive plots to support two-way linked brushing, we need to impose some constraints on the summaries that we will compute.
+
+We propose that any summary computed on the parts should form a commutative monoidal preorder. To rephrase Section \ref{monoids}, the summaries should consists of a set $M$ with elements that can be at least partially ordered (such that, for any $m_1$ and $m_2$, we may determine whether $m_1 \leq m_2$), a neutral element $e$, and a binary operation $\otimes$ such that:
+
+1. $m \otimes e = e \otimes m = m$ for all $m \in M$ (unitality)
+2. $m_1 \otimes (m_2 \otimes m_3) = (m_1 \otimes m_2) \otimes m_3 = m_1 \otimes m_2 \otimes m_3$ for all $m_1, m_2, m_3 \in M$ (associativity)
+3. $m_1 \otimes m_2 = m_2 \otimes m_1$ for all $m_1, m_2 \in M$ (commutativity)
+4. If $m_1 \leq m_3$ and $m_2 \leq m_4$ then $m_1 \otimes m_2 \leq m_3 \otimes m_4$ for all $m_1, m_2, m_3, m_4 \in M$ (monotonicity)
+
+Why might these properties be desirable for summaries represented by interactive visualizations? Let's go through them one by one. Property 1. says that there is a valid way of representing "nothing" in our summary. As we have seen in \ref{empty}, this is useful since, for example, the absence of an object unambiguously indicates an empty selection. Property 2. says that combining   
+
+Requiring summaries to be commutative monoidal preorder has another benefit. This condition means that we can always compute the summaries in a single pass through the data, via a *reduce*/*fold*/*accumulate* function [see e.g. @abelson2022, p. 53]. Specifically, we can reduce the data into $k$ collections of summaries on the $k$ parts (within one partition level) by first initializing each collection with the default values (monoidal units), and then iterating through the $n$ data points and updating $j$th collection on each step, with $j$ being the factor level corresponding to the $i$th datapoint. 
+
+\pagebreak
 
 # References
