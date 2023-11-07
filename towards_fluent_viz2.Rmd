@@ -18,7 +18,7 @@ Interactive data visualization (IDV) has seen a rapid growth in popularity over 
 
 Interactive figures now frequently appear in online news articles, business dashboards, and scientific publications and blogs. Yet, despite the wide proliferation of IDV systems and various taxonomies of interactive features [see e.g. @yi2007], there still looms a large unresolved problem in the production of IDVs. That is, interactive data visualizations, like all visualizations, require us to process data into statistical summaries that can then be translated into graphical attributes and drawn. However, in contrast to static visualizations, where all data processing needs to occur only once, IDVs need to respond to user input reactively, with relevant quantities often having to be recomputed many times a second [@wickham2009]. Further, different types of interactions come with different levels of computational complexity [see e.g. @leman2013; @pike2009]. Thus, the way we process the data and implement the interactions matters a lot. Some interactions can be implemented by manipulating graphical attributes of the visualization only. For example, to implement panning or zooming, all we need to do is compute the axis limits once. After that, we can "forget" the original data and merely update the four scalar values (= lower and upper x-axis and y-axis limits) whenever the user performs the requisite actions. However, this is not the case for other, more complex types of interactions. For example, if we want to implement an interactive histogram in which the user can change the binwidth and anchor, we need a way to recompute the number of cases in each bin after either of the two parameters is updated. This means that we have to refer to the original data. Similarly, to implement linked highlighting/brushing, whereby the user can highlight some cases in the data across multiple plots by either clicking or click-and-drag selecting the corresponding geometric objects in one plot, we need to keep track of which cases belong to which object. 
 
-As such, there have been calls for a general interactive data visualization pipeline or "plumbing" [@wickham2009] that would allow us to reason about the production of IDVs in the same way that for example the *grammar of graphics* [@wilkinson2012] has. However, these have, despite some attempts [see e.g. @xie2014; @crossfilter2023], been left largely unaddressed.  
+As such, there have been calls for a general interactive data visualization pipeline or "plumbing" [@wickham2009] that would allow us to reason about the production of IDVs in the same way that, for example, the *Grammar of Graphics* [@wilkinson2012] has allowed us to reason about static visualization. However, these have, despite some attempts [see e.g. @xie2014; @crossfilter2023], been left largely unaddressed.  
  
 # The illusion of objects
 
@@ -44,9 +44,9 @@ knitr::include_graphics("magritte.jpg")
 
 ```
 
-Thus, objects in a plot are imbued with some additional information or structure, beyond their simple geometries. That should not seem surprising or controversial to people familiar with data visualization. Indeed, for example, geometric objects or `geoms` are considered just one attribute of a plot in the *grammar of graphics* [@wilkinson2012]. However, it may be more challenging to define in detail what exactly this "structure" is. There are a few ideas we may be able to muster. First of all, we know that the geometric objects in plots are supposed to represent some underlying data. That much is clear - if the objects in a graphic do not represent any external data but are instead drawn according to some arbitrary rules, we cannot really, in good conscience, call the resulting graphic a "plot". But data is only a part of the story. 
+Thus, objects in a plot are imbued with some additional information or structure, beyond their simple geometries. That should not seem surprising or controversial to people familiar with data visualization. Indeed, for example, geometric objects or `geoms` are considered just one attribute of a plot in the *Grammar of Graphics* [@wilkinson2012]. However, it may be more challenging to define in detail what exactly this "structure" is. There are a few ideas we may be able to muster. First of all, we know that the geometric objects in plots are supposed to represent some underlying data. That much is clear - if the objects in a graphic do not represent any external data but are instead drawn according to some arbitrary rules, we cannot really, in good conscience, call the resulting graphic a "plot". But data is only a part of the story. 
 
-When drawing plots, we rarely represent the raw data directly. Instead, we often summarize, aggregate, or transform. We do this by applying mathematical functions such as count, sum, mean, log, or the quantile function. And it is the output of these transformations that we then represent by the geometric objects. 
+When drawing plots, we rarely represent the raw data directly. Instead, we often summarize, aggregate, or transform [see @wilkinson2012, Chapter 7]. We do this by applying mathematical functions such as count, sum, mean, log, or the quantile function. And it is the output of these funtions that we then represent by the geometric objects.  
 
 So, when interacting with a bar in an interactive barplot, we do not just interact with a plain geometric object. Instead, we interact with a mathematical function, or, in fact, several of them. This is very important since functions have properties, and these properties impose limits on what kinds of visualizations and interactions we can meaningfully compose. This is the core argument of the present text. Before diving deeper, however, let's first define some key terms and draw a rough sketch of the data visualization process as a whole. 
 
@@ -77,6 +77,14 @@ Or, equivalently:
 The above should be fairly non-controversial description of how a data visualization is produced, and applies equally well to static as well as interactive visualizations. There are a few caveats. Firstly, while not always the case, *order* can be important. For example, while we can draw the bars in a barplot in no particular order, lines in a lineplot need to be drawn by connecting points in specific order, otherwise we can end up with completely different-looking visualization. This means that either $S$, $G$, or their components, may need to be ordered. Secondly, *hierarchy* can also be important and the collections may form tree/graph-like structure. This is particularly relevant when stacking. For example, when drawing a stacked barplot, we need to stack the graphical coordinates representing the sub-bars on top of each other, such that each sub-bar is stacked within the appropriate parent-bar and in the correct order (e.g. such that sub-bars belonging to group 2 always go on top group 1 sub-bars). If it is the case that order matters for either $\alpha$ or $\beta$, then we cannot call them true functions either, since each of the elements in their domain needs to be aware of the other elements. That is, when stacking bars in a stacked barplot, we need to "remember" what bars we have stacked before. 
 
 # The problem of statistical summaries {#problem}
+
+> *"Some of the combinations of graphs and statistical methods may be degenerate or bizarre, but there is no moral reason to restrict them."*
+>
+> Grammar of Graphics, @wilkinson2012, p. 112
+
+>*"It's unclear to me what you want to do here – what do you expect to happen? If you highlight a line segment on one chart, what should be highlighted on the other chart? The line segments do not have a 1-1 mapping between panels because the points are in different orders, so it's not obvious to me what the "right" behavior is."*
+>
+> Response to a StackOverflow post about linked brushing [@jakevdp2019]
 
 Circling back to the illusory rectangle in a barplot, we can now talk about interacting with the summarizing function $\alpha$. In a typical barplot, $\alpha$ consists of the simple act of "counting" how many times each of the $k$ unique levels of the categorical variable appears. We could substitute a different statistical for $\alpha$, e.g. taking the sum or mean of the values of some other (continuous) variable in the data. But herein lies a problem.    
 
@@ -353,7 +361,7 @@ axis_fun2()
 
 ```
 
-## Some statistics are better than others
+## Case for restricting statistics?
 
 To summarize, counts, as implemented in a typical barplot, provide:
 
@@ -372,7 +380,7 @@ Are counts unique, in being so well-behaved? The short answer is "no". For examp
 ```{r sumsproducts}
 #| echo: false
 #| fig-height: 3
-#| fig-cap: "Sums and products work equally well as counts when it comes to displaying empty selections, providing a stable visual reference, and being able to be combined. Note the different y-axis limits. a) The underlying data. b) Barplot of products. c) Barplot of sums"
+#| fig-cap: "Sums and products work just as well as counts when used in an interactive barplot. Specifically, they provide a way of displaying empty selections, providing a stable visual reference, and ability to combine parts in a coherent way. Note the different y-axis limits. a) The underlying data. b) Barplot of products. c) Barplot of sums"
 
 group <- rep(c("A", "B"), each = 3)
 props <- c(NA, 1.5, 1.1, 1.4, 1.1, 1.2)
@@ -424,7 +432,10 @@ title(main = "c.", adj = 0, line = 0.5)
 
 # Few relevant bits of applied category theory
 
-The short treatment below follows mainly from parts of @fong2019, @lawvere2009, @baez2023, and @milewski2018. Category theory is a very rich and deep subject, and this treatment only goes over a few very basic concepts. Further, these concepts appear in other areas mathematics as well, including abstract algebra and group theory, and so it could be argued that the term "category theory" is out of place here. Nonetheless, I titled this section in this way because that is how I discovered the concepts, and I think it may provide a useful signpost for anyone who would want to dive deeper. I hope that any mathematician who might read this can tolerate the pedestrian nature on display here. But that is also somewhat the point - even a few basic concepts might be valuable when thinking about (interactive) visualizations.   
+The short treatment below follows mainly from parts of @fong2019, @lawvere2009, @baez2023, and @milewski2018. Category theory is a very rich and deep subject, and this treatment only goes over a few very basic concepts. Further, these concepts appear in other areas mathematics as well, including abstract algebra and group theory, and so it could be argued that the term "category theory" is out of place here. Nonetheless, I titled this section in this way because that is how I discovered these concepts, and I think it may provide a useful signpost for anyone who would want to dive deeper. I hope that any mathematician who might read this can tolerate the pedestrian nature on display here. But that is also somewhat the point - even a few basic concepts might be valuable when thinking about (interactive) visualizations.
+
+Many of these ideas appear in Grammar of Graphics [@wilkinson2012]. Specifically, functions, partitions, and relations are all discussed therein. What is new however is the discussion of monoids, which is critical the core argument of the present text.
+
 
 ## Functions
 
@@ -626,11 +637,10 @@ This whole time, we have been talking about computing summaries on partitions (e
 
 <!-- Either way, numerical summaries are usually what we think of when it comes to statistical summaries in plots. The classic examples include counts, sums, or means. However, as was discussed in Section \ref{problem}, some types of summaries such as means do not make for well-behaved interactive graphics. Provided that we want our interactive plots to support two-way linked brushing, we need to impose some constraints on the summaries that we will compute. -->
 
-We propose that all summaries computed on the parts should be commutative monoidal posets. To rephrase Section \ref{monoids}, the summaries should consists of a set $M$ that has elements that can be at least partially ordered, has a neutral element $e$, and is equipped with a binary operation $\otimes$ such that:
+We propose that all summaries computed on the parts should be a monoidal posets. To rephrase Section \ref{monoids}, the summaries should consists of a set $M$ that has elements that can be at least partially ordered, has a neutral element $e$, and is equipped with a binary operation $\otimes$ such that:
 
 1. $m \otimes e = e \otimes m = m$ for all $m \in M$ (unitality)
 2. $m_1 \otimes (m_2 \otimes m_3) = (m_1 \otimes m_2) \otimes m_3 = m_1 \otimes m_2 \otimes m_3$ for all $m_1, m_2, m_3 \in M$ (associativity)
-3. $m_1 \otimes m_2 = m_2 \otimes m_1$ for all $m_1, m_2 \in M$ (commutativity)
 4. If $m_1 \leq m_3$ and $m_2 \leq m_4$ then $m_1 \otimes m_2 \leq m_3 \otimes m_4$ for all $m_1, m_2, m_3, m_4 \in M$ (monotonicity)
 
 Why might we want to set up things like so? Let's break things down one by one. 
@@ -641,7 +651,7 @@ This definition permits a great number of possible summaries. For example, discr
 
 The only real restriction of having the summaries be posets is that our summaries have to be comparable in a way that prohibits cycles: e.g. cycles such as $A \leq B$, $B \leq C$, and $C \leq A$ (technically, we should specify "cycles of length $\geq 2$" since $A \leq A$ is also a cycle). Consequently, this also means we could represent any summary via a DAG. This all seems reasonable, since the essence of data visualization is comparison: the graphical attributes of the objects we draw must either indicate no particular relation (e.g. if the $"female"$ bar is left of the $"male"$ bar in a barplot, this does not indicate that one category is "more" or "less" than the other, in any meaningful sense, outside of alphabetical order possibly) or be directly comparable (if the $"female"$ bar is higher than the $"male"$ bar, this may mean that there are, for example more females in the data than males).  
 
-The constraints imposed on the binary operation (the monoidal product $\otimes$) are more restrictive, however, for certain types of interactions they may be useful or indeed neccessary. *Unitality* says that there is a valid way of representing "nothing" in our summary. As we have seen in \ref{empty}, this is useful since, for example, the absence of an object unambiguously indicates an empty selection. *Associativity* says that the order of operations should not matter. This is intuitively desirable: it should not matter whether we summarize our entire data set, or whether we first summarize some parts or "chunks" of it, and then summarize across those parts. *Commutativity* is a bit more subtle. It essentially says that the order of the data units (or "rows", when dealing with tabular data) should not matter when computing the summaries. Finally, *monotonicity* says that every summary should only ever "increase" along its axis.  
+The constraints imposed on the binary operation (the monoidal product $\otimes$) are more restrictive, however, for certain types of interactions they may be useful or indeed neccessary. *Unitality* says that there is a valid way of representing "nothing" in our summary. As we have seen in \ref{empty}, this is useful since, for example, the absence of an object unambiguously indicates an empty selection. *Associativity* says that the order of operations should not matter. This is intuitively desirable: it should not matter whether we summarize our entire data set, or whether we first summarize some parts or "chunks" of it, and then summarize across those parts. Finally, *monotonicity* says that every summary should only ever "increase" along its axis.  
 
 Combined,these properties mean that every unit of the data or data point can be thought of as "visibly contributing" towards its respective summary. Conversely, we could imagine "recovering" the influence of single data point, by e.g. making a bar in a barplot of sums "shorter" by the data point's value. If there indeed is such an inverse function to the monoidal product (e.g. "subtraction" being inverse to "summation"), then the summary is in fact not just a monoid but also a group. This is in fact how Crossfilter manages to implement fast single-case incremental updates, by requiring every grouped summary to also have an inverse [see the `group.reduce` function in the documentation, @crossfilter2023].
 
@@ -649,9 +659,13 @@ Requiring summaries to be commutative monoidal preorder also has computational a
 
 ## Displaying summaries through graphical attributes
 
-We may have to break some of the properties that the summaries computed on the parts had. Specifically, by definition, the stacking operation is not commutative, since the order in which we stack groups does matter.  
+TODO
 
+# Conclusion
 
+The core argument of the present text has been that, when it comes to interactive data visualization, we need to think deeply about the statistical summaries underlying our plots. Conversely, no matter how tempting it may be, we cannot think of the objects in our plots simply in terms of their geometry. Instead, we have to consider the properties of the functions that underlie the geometric objects, and, based on these properties and the interactive features we want to implement, some functions may come up as better or more appropriate than others. Specifically, if we want to implement features such as general two-way linked brushing, the summaries we compute on the data may have to conform to certain algebraic structures, such as a monoidal poset. 
+
+This has strong implications for the design of interactive data visualization systems. Specifically, the systems should be structured in such a way that makes it easy to produce graphics which conform to the algebraic structure, and disallow or discourage the production of those which do not.   
 
 \pagebreak
 
